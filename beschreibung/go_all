@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+#Latex script for the antrag_cfddem
+#
+#Update the bibliography
+#rsync -av ~/Documents/bibliography/*.bib ~/Documents/Dissertation/
+#
+#Run pdflatex once
+pdflatex  --shell-escape antrag_cfddem.tex
+#
+#Make Bibliography
+biber antrag_cfddem
+#
+#Rerun pdflatex (3x)
+pdflatex --shell-escape antrag_cfddem.tex
+pdflatex --shell-escape antrag_cfddem.tex
+pdflatex --shell-escape antrag_cfddem.tex
+#

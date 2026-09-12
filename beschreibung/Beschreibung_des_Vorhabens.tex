@@ -1,0 +1,1857 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Neu-Antrag fuer DFG: Gusts
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%     Version 02: 12.04.2019  MB 
+%     Version 03: 18.04.2019  MB
+%     Version 04: 25.06.2025  MB
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\documentclass[a4paper,twoside,draft]{article}
+ \documentclass[11pt,a4paper,twoside]{scrartcl}
+% \documentclass[review,preprint,10pt,a4paper,twoside]{scrartcl}
+ \usepackage[utf8]{inputenc}
+%% \usepackage[german]{babel}
+%% \usepackage{german}
+ \usepackage[english]{babel}
+ \usepackage{color}
+ \usepackage{colortbl}
+ %\usepackage{cite}
+ \usepackage{epsfig}
+ %\usepackage{german}
+ \usepackage{pstricks}
+ \usepackage{subfigure}
+ %\usepackage{subcaption}
+ \usepackage{graphicx,calc}
+ \usepackage{picinpar}
+ \usepackage{eurosym}
+ \usepackage{amstext,amssymb,amsmath}
+ \usepackage{url}
+ \usepackage{verbatim}
+ \usepackage{import}
+ \usepackage{rotating}
+ \usepackage{multirow}
+ \usepackage{tikz}
+ \usetikzlibrary{matrix,calc,,arrows.meta,shapes,positioning,shadows,trees,mindmap,backgrounds}
+ \newcommand{\DrawArrowConnection}[5][]{
+ 	\path let \p1=($(#2)-(#3)$),\n1={0.15*veclen(\x1,\y1)} in 
+ 	($(#2)!\n1!90:(#3)$) coordinate (#2-A)
+ 	($(#2)!\n1!270:(#3)$) coordinate (#2-B)
+ 	($(#3)!\n1!90:(#2)$) coordinate (#3-A)
+ 	($(#3)!\n1!270:(#2)$) coordinate (#3-B);
+ 	\foreach \Y in {A,B}
+ 	{
+ 		\pgfcoordinate{P-#2-\Y}{\pgfpointshapeborder{#2}{\pgfpointanchor{#3-\Y}{center}}}
+ 		\pgfcoordinate{P-#3-\Y}{\pgfpointshapeborder{#3}{\pgfpointanchor{#2-\Y}{center}}}
+ 	}
+ 	\shade let \p1=($(#2)-(#3)$),\n1={atan2(\y1,\x1)-90} in
+ 	[top color=#4,bottom color=#5,shading angle=\n1] (P-#2-A) 
+ 	to[bend left=15] 
+ 	($($(P-#2-A)!0.4!(P-#3-B)$)!0.25!($(P-#2-B)!0.4!(P-#3-A)$)$)
+ 	-- ($($(P-#2-A)!0.4!(P-#3-B)$)!3.14pt!270:(P-#3-B)$)
+ 	-- ($($(P-#2-A)!0.6!(P-#3-B)$)!0.25!($(P-#2-B)!0.4!(P-#3-A)$)$) 
+ 	to[bend left=15] (P-#3-B) --
+ 	(P-#3-A)  to[bend left=15] 
+ 	($($(P-#3-A)!0.4!(P-#2-B)$)!0.25!($(P-#3-B)!0.6!(P-#2-A)$)$)
+ 	-- ($($(P-#3-A)!0.6!(P-#2-B)$)!3.14pt!270:(P-#2-B)$)
+ 	-- ($($(P-#3-A)!0.6!(P-#2-B)$)!0.25!($(P-#3-B)!0.6!(P-#2-A)$)$) 
+ 	to[bend left=15] (P-#2-B) -- cycle;
+ }
+ 
+ %
+ \usepackage{scrlayer-scrpage}
+ 
+ \pagestyle{scrheadings}
+ 
+ \clearpairofpagestyles % Clear header and footer
+ 
+ % inner header
+ \ihead{DFG form 53.01 – 03/25}
+ 
+ % outer header with page number and "out of maximum 18"
+ \ohead*{\pagemark\ out of maximum 17}
+ %
+ 
+ \newcommand\hmmax{0}
+ \newcommand\bmmax{0}
+ 
+ %\usepackage{tikz-mindmap}
+% New packages from Andreas: needed for the table 
+ \usepackage{pifont}
+ \newcommand{\cmark}{\ding{51}}
+ \newcommand{\xmark}{\ding{55}}
+ \usepackage{xcolor}
+ \usepackage{bm,array}
+ \usepackage{nth}
+ \usepackage{mathrsfs}
+ %
+ \usepackage{helvet}
+ \renewcommand{\familydefault}{\sfdefault}
+ 
+ \usepackage[helvet]{sfmath}
+ \everymath={\sf}
+ %
+\usepackage{xcolor, soul}
+\sethlcolor{yellow}
+
+% \usepackage[bf,small,hang]{caption}
+ \usepackage[labelfont=bf,textfont=sf,font=small,sf]{caption}
+
+
+
+
+% Corrects an error with \bf
+ \DeclareOldFontCommand{\rm}{\normalfont\rmfamily}{\mathrm}
+ \DeclareOldFontCommand{\sf}{\normalfont\sffamily}{\mathsf}
+ \DeclareOldFontCommand{\tt}{\normalfont\ttfamily}{\mathtt}
+ \DeclareOldFontCommand{\bf}{\normalfont\bfseries}{\mathbf}
+ \DeclareOldFontCommand{\it}{\normalfont\itshape}{\mathit}
+ \DeclareOldFontCommand{\sl}{\normalfont\slshape}{\@nomath\sl}
+ \DeclareOldFontCommand{\sc}{\normalfont\scshape}{\@nomath\sc}
+
+%% \renewcommand{\baselinestretch}{0.928}
+%% good one
+ \renewcommand{\baselinestretch}{0.949}
+
+ \renewcommand{\theequation}{{\sffamily\arabic{equation}}}
+
+ \usepackage{hyperref}
+
+        \hypersetup{pdftitle={Neuantrag für die Deutsche Forschungsgemeinschaft},
+		    pdfsubject={CFDDEM},
+		    pdfauthor={Ali Khalifa},
+                    linktocpage=true, % THe TOC, LOF pages are links
+		    bookmarks=true,
+		    bookmarksopen=true,
+		    bookmarksnumbered=true, 
+		    pdfpagelabels=true,
+		    pdfpagemode=None, % bookmarks are closed when I open a pdf
+		    plainpages=false, % necessary for pagebackref
+%		    backref=slide, % options : section; slide; page; none
+	            colorlinks=true, % Links in color
+                    citecolor=blue,
+		    urlcolor=blue,
+		    filecolor=green,
+		    linkcolor=violet}
+%
+%%% Package for bibliography
+%
+%\usepackage[natbib=true]{biblatex}
+\usepackage[
+backend=biber,
+style= numeric, %authoryear-comp
+natbib=true,
+url=false, % prints the URL
+doi=true, % prints the DOI
+isbn=false, % prints the ISBN
+eprint=false,
+maxbibnames=20, % number of authors in the bibliography
+maxcitenames=2, % number of authors in the text
+maxalphanames=1,
+labelalpha=false,
+sorting=anyt,
+%dashed=false,
+firstinits=true,
+hyperref=true, % hyperlinks to the citation, DOI, etc.
+backref=false, % list the pages where the citation appears
+backrefstyle=two+,
+uniquename=false,
+uniquelist=false,
+useprefix=true,
+sortcites=true
+]{biblatex}
+%
+%
+\newcommand{\reford}[1]{} % to order same year same author
+%puplications (see revisiting and refinement as an example)
+%
+%
+% Set separation between entries
+%
+\setlength\bibitemsep{0.5\baselineskip}
+%
+%
+% Modify citation style
+%
+\DeclareFieldFormat[thesis,book,inproceedings,incollection]{date}{\mkbibparens{#1}}
+
+%
+\renewbibmacro*{volume+number+eid}{%
+	\printfield{volume}%
+	\setunit*{\addnbspace}% NEW (optional); there's also \addnbthinspace
+	\printfield{number}%
+	\setunit{\addcomma\space}%
+	\printfield{eid}}
+\DeclareFieldFormat[article]{number}{\mkbibparens{#1}}
+\DeclareFieldFormat{pages}{#1}
+%
+\renewbibmacro*{edition+volume}{%
+	\printfield{volume}%
+	\setunit*{\addnbspace}% NEW (optional); there's also \addnbthinspace
+	\printfield{edition}}
+%
+\renewbibmacro*{institution+location+date}{%
+	\printlist{institution}%
+	%  \setunit*{\addcomma\space}%
+	\newunit
+	\printlist{location}%
+	\setunit*{\addcomma\space}%
+	\usebibmacro{date}%
+	\newunit}
+%
+\renewbibmacro*{publisher+location+date}{%
+	\printlist{publisher}%
+	%  \setunit*{\addcomma\space}%
+	\newunit
+	\printlist{location}%
+	\setunit*{\addcomma\space}%
+	\usebibmacro{date}%
+	\newunit}
+%
+%%%\renewbibmacro*{institution+publisher+location+date}{%
+	%%%  \printlist{institution}%
+	%%%%  \setunit*{\addcomma\space}%
+	%%%  \newunit
+	%%%  \printlist{publisher}%
+	%%%  \setunit*{\addcomma\space}%
+	%%%  \newunit
+	%%%  \printlist{location}%
+	%%%  \setunit*{\addcomma\space}%
+	%%%  \usebibmacro{date}%
+	%%%  \newunit}
+%
+\AtBeginBibliography{\renewcommand\finalandcomma{}}
+%
+\DefineBibliographyExtras{american}{\def\finalandcomma{}}
+%
+% Remove the "In: " in the citations
+%
+%\renewbibmacro{in:}{}
+\renewbibmacro{in:}{%
+	\ifentrytype{article}{}{\printtext{\bibstring{in}\intitlepunct}}}
+%\renewbibmacro{in:}{
+	%  \ifboolexpr{%
+		%     test {\ifentrytype{inbook}}%
+		%     or
+		%     test {\ifentrytype{inproceedings}}%
+		%     or
+		%     test {\ifentrytype{incollection}}%
+		%  }{}{\printtext{\bibstring{in}\intitlepunct}}%
+	%}
+%
+% Remove the quotes for the title
+%
+\DeclareFieldFormat[article,inbook,incollection,inproceedings,patent,thesis,unpublished]{citetitle}{#1}
+\DeclareFieldFormat[article,inbook,incollection,inproceedings,patent,thesis,unpublished]{title}{#1}
+%
+%
+\DeclareListFormat[thesis,book]{institution}{#1\addcomma}
+\DeclareFieldFormat[book]{note}{#1\addcomma}
+%
+\defbibfilter{important}{keyword=important}
+%
+
+% Add Libraries
+%
+\addbibresource{breakup.bib}
+\addbibresource{agglo.bib}
+\addbibresource{mybib.bib}
+\addbibresource{particle.bib}
+\addbibresource{allgemein.bib}
+\addbibresource{diss.bib}
+%\addbibresource{masterarbeit.bib}
+%
+
+
+% Define toggles for bold and blue entries
+\newtoggle{bbx:boldentries}
+\newtoggle{bbx:blueentries}
+
+% Declare categories for bold and blue entries
+\DeclareBibliographyCategory{boldentry}
+\DeclareBibliographyCategory{blueentry}
+
+% Apply formatting for bold entries
+\AtEveryBibitem{
+	\ifboolexpr{togl {bbx:boldentries} and test {\ifcategory{boldentry}}}
+	{\bfseries\color{red}}
+	{}
+}
+
+% Apply formatting for blue entries
+\AtEveryBibitem{
+	\ifboolexpr{togl {bbx:blueentries} and test {\ifcategory{blueentry}}}
+	{\color{blue}}
+	{}
+}
+
+% Add entries to bold and blue categories
+\addtocategory{boldentry}{
+	khalifa2024eval,breuer2019revisiting,breuer2019refinement,
+	khalifa2020data,khalifa2021efficient,khalifa2022neural,dissKhalifa2022,
+	khalifa2023data,khalifa2021les,breuer2020break,
+}
+%\addtocategory{blueentry}{
+%	cranmer2020discovering,cranmer2023int,schmidt2009distilling,
+%	elmestikawy2024det,brunton2020machine,beetham2021sparse,
+%	beetham2023multiphase,beetham2020formulating,
+%}
+
+% Enable the toggles
+\toggletrue{bbx:boldentries}
+\toggletrue{bbx:blueentries}
+%
+
+%
+%% \selectlanguage{ngerman}
+\selectlanguage{english}
+
+\setlength{\parskip}{0.1cm}
+\textwidth17.00cm
+\textheight25.60cm
+\oddsidemargin0.0cm
+\evensidemargin0.0cm
+%%\topmargin-0.95cm
+\topmargin-1.15cm
+\headheight0cm
+\parindent0em
+\pagenumbering{arabic}
+
+% to control the distance between text and page number
+\setlength{\footskip}{27pt}
+
+\pagestyle{headings}% must be before the patch
+\makeatletter
+\def\buggysectionmark #1{% KOMA 3.12 as released to CTAN December 2013
+    \if@twoside\expandafter\markboth\else\expandafter\markright\fi
+    {\MakeMarkcase{\ifnumbered{section}{\sectionmarkformat\fi}{}#1}}{}}
+\ifx\buggysectionmark\sectionmark
+\def\sectionmark #1{%
+    \if@twoside\expandafter\markboth\else\expandafter\markright\fi
+    {\MakeMarkcase{\ifnumbered{section}{\sectionmarkformat}{}#1}}{}}
+\fi
+\makeatother
+
+
+\sloppy
+
+%%%% Hilfsbefehle %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\tfa}[1]{{\large \bf #1}}
+\newcommand{\tfb}[1]{{\bf #1}}
+
+\renewcommand{\floatpagefraction}{0.92}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+
+% To reduce spacing around the subfigures and the figures
+%\renewcommand{\subfigcapskip}{-3pt}
+%\renewcommand{\subfigbottomskip}{4pt}
+\setlength{\abovecaptionskip}{2pt}
+\setlength{\belowcaptionskip}{0pt}
+
+\newcommand{\lesocc}{$\cal{LESOCC \;}$}
+\newcommand{\lesocco}{$\cal{LESOCC}$}
+\newcommand{\fastest}{$\cal{FASTEST \;}$}
+\newcommand{\fastesto}{$\cal{FASTEST}$}
+\newcommand{\vs}{\vspace*{-0.075cm}}
+\newcommand{\vsb}{\vspace*{-0.1cm}}
+\newcommand{\vsc}{\vspace*{-0.1cm}}
+
+\definecolor{dunkelgrau}{rgb}{0.9,0.9,0.9}
+\definecolor{hellgrau}{rgb}{0.95,0.95,0.95}
+
+\newcommand{\TUM}[1]
+{{\Large \texttt{\color{red} {~~\\
+Fuer R.W.:  #1}}}}
+
+\newcommand{\HSU}[1]
+{{\Large \texttt{\color{blue} {~~\\
+ M.B.       ~~...... Your Input is required here !!! ....... \\ #1}}}}
+
+\newcommand{\MB}[1]{\textcolor{blue}{ \textbf{MB-Remark: #1}}}
+\newcommand{\gdn}[1]{\textcolor{red}{ \textbf{GDN-Remark: #1}}}
+
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+% balken{0cm}{3cm} erzeugt einen Balken ab Juli 98 f"ur 3 Halbjahre)
+% balken{1cm}{2cm} erzeugt einen Balken von Januar 99 f"ur 2 Halbjahre
+\newcommand{\balken}[2]{\protect\makebox[0cm][l]{\rule{#1}{0cm}
+                        \rule[0mm]{#2}{0.3cm}}}
+
+%%\def\draftmode{true}
+\def\draftmode{false}
+\graphicspath{{./images/}}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\def\figurename{Fig.\/}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\sffamily 
+
+
+\thispagestyle{empty}
+
+\begin{center}
+\vspace*{1.cm}
+%{\huge \textbf{\color{blue}\textsf{Revised}}}\\*[3ex]
+
+{\huge \textbf{\textsf{Project Proposals}}}\\*[3ex]
+
+{\large {\textsf{for the}}}\\*[3ex]
+
+{\Large {\textsf{Deutsche Forschungsgemeinschaft}}}\\*[16ex]
+
+{\LARGE\textbf{\textsf{Hybrid Multiscale Modeling of Biological Aggregate Dynamics: Graph-Based Learning and Neural ODE Closures for Population Balance Models}}}\\*[1ex]
+
+%{\LARGE\textbf{\textsf{ investigation for detailed insights and advanced modeling}}}\\*[1ex]
+
+%{\LARGE\textbf{\textsf{
+%			 and advanced modeling}}}\\*[2ex]
+		
+{\LARGE \textbf{\textsf{ }}}\\*[2ex]
+
+        {\large\textsf{(Keyword: Dynamics of Biological Aggregates in Bioreactors)}}\\*[8ex]
+
+%% {\Large \textbf{\textsf{(BR~1847/12 und BL~306/26)}}}\\*[4ex]
+
+{\large \textsf{by}}\\*[4ex]
+
+
+{\large \textbf{\textsf{Prof.\ Dr.--Ing.\ Heiko Briesen}}}\\*[2ex]
+{\large \textbf{\textsf{Dr.--Ing.\ Ali Khalifa}}}\\*[20ex]
+
+%% {\large \textbf{\textsf{Priv.--Doz.\ Dr.--Ing.\ habil. Roland Wüchner}}}\\*[4ex]
+
+%% \includegraphics[width=0.45\linewidth,draft=\draftmode]
+%%  {hemisphere_FSI_IGA_medium_STIG_mag_factor_1_vorticity_mag_from_hell_resize.png}
+
+\vspace*{0.8cm}
+
+{\large \textbf{\textsf{September 2026}}}
+
+\vspace*{0.4cm}
+
+\rule{16cm}{0.08cm}
+\vspace*{0.2cm}
+
+{\Large \textbf{\textsf{Technical University of Munich}}}\\*[2ex]
+
+{\Large \textbf{\textsf{School of Life Sciences}}}\\*[2ex]
+
+{\Large \textbf{\textsf{Chair of Process Systems Engineering}}}\\*[2ex]
+
+\vspace*{0.0cm}
+\rule{16cm}{0.08cm}
+\end{center}
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+~~\\
+
+\thispagestyle{empty}
+
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%{%\large 
+
+\pagenumbering{arabic}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{center}
+  {\LARGE \textbf{\textsf{Hybrid Multiscale Modeling of Biological Aggregate Dynamics: Graph-Based Learning and Neural ODE Closures for Population Balance Models}}} 
+                       %high-resolution\\*[0.3ex]
+                       %simulations and  }}}
+\end{center}
+
+%---------------------------------------------------------------------------------
+
+\section{Starting point}
+\def\mbsecname{Ausgagspunkt}
+\label{Starting_point}
+
+%---------------------------------------------------------------------------------
+\subsection{State of the Art
+	\label{state-of-the-art}
+	\label{sec:stateofart}}
+
+Biological aggregates such as cell spheroids, organoids, microtissues, and other multicellular structures are increasingly important in bioprocess engineering. Their behavior is determined by interacting biological, transport, and mechanical processes. These include cell growth, nutrient and oxygen transport, cell--cell adhesion, aggregate restructuring, collisions, aggregation, and flow-induced loss of aggregate integrity.
+
+The relevant mechanisms act across different spatial and temporal scales. At the primary-particle scale, the local coordination and connectivity of individual cells determine the internal structure and mechanical strength of an aggregate. At the aggregate scale, morphology influences hydrodynamic loading, mass transfer, and collision behavior. At the reactor scale, the combined evolution of many aggregates determines the population size distribution and, ultimately, bioprocess performance.
+
+\subsubsection{Population Balance Modeling of Aggregate Populations}
+
+Population balance models provide an established framework for describing the temporal and spatial evolution of distributed particle or aggregate populations. The population is represented by a number-density function defined over one or more internal coordinates. Depending on the application, these coordinates may include aggregate size, mass, age, composition, porosity, or biological state.
+
+For aggregate-forming systems, the population balance equation commonly contains terms describing growth, aggregation, and deagglomeration. Aggregation is represented through a collision kernel, which is often decomposed into a collision frequency and a collision efficiency. Deagglomeration is described through a frequency function and a daughter-size distribution.
+
+Multidimensional PBMs can, in principle, account for properties in addition to aggregate size. Models including morphology-related coordinates, such as porosity or fractal structure, have been proposed for different particulate systems. Nevertheless, the increased dimensionality substantially raises the numerical complexity of the population balance equation. Consequently, most practically applicable models retain aggregate size or mass as the dominant internal coordinate and represent structural effects through simplified correlations or prescribed auxiliary variables.
+
+For biological aggregates, PBMs have been applied to predict the evolution of aggregate-size distributions resulting from growth and aggregation. Such models demonstrate the suitability of the PBM framework for biological populations. However, the corresponding kernels generally remain system-specific and must be identified from experimental population data or adopted from simplified collision and aggregation theories.
+
+\subsubsection{Closures for Aggregation and Deagglomeration}
+
+The predictive quality of a PBM depends strongly on the closure models used for aggregation and deagglomeration. Collision-frequency expressions are commonly derived from idealized mechanisms such as Brownian motion, differential settling, laminar shear, or turbulent fluctuations. The probability that a collision produces a stable aggregate is introduced through a collision-efficiency factor.
+
+These closures generally depend on aggregate size, fluid properties, local shear rate, or turbulent energy-dissipation rate. Aggregate morphology may be included through quantities such as fractal dimension, porosity, collision radius, or an effective density. However, these quantities are commonly prescribed or obtained from separate empirical relationships.
+
+A similar limitation applies to deagglomeration models. Deagglomeration frequencies are usually related to the comparison between an external hydrodynamic stress and an assumed aggregate strength. Daughter-size distributions are then prescribed using empirical or idealized distribution functions.
+
+Such models provide computationally tractable closures, but they reduce the detailed mechanical state of an aggregate to a small number of averaged quantities. They do not directly resolve how hydrodynamic loading is transmitted through the aggregate contact network, where mechanically weak regions develop, or how previous loading changes the subsequent response of an aggregate.
+
+\subsubsection{Coupling of CFD and Population Balance Models}
+
+Coupling PBMs with computational fluid dynamics allows spatially varying reactor conditions to be considered. CFD can provide local quantities such as velocity, shear rate, turbulent energy-dissipation rate, and scalar concentrations. These quantities are then used as inputs to local aggregation and deagglomeration kernels.
+
+CFD--PBM coupling therefore improves upon models based exclusively on spatially averaged reactor conditions. It allows aggregate populations passing through different reactor regions to experience different collision frequencies and mechanical environments.
+
+However, CFD--PBM coupling does not by itself resolve the closure problem. The local flow quantities obtained from CFD must still be translated into aggregation probabilities, structural changes, and deagglomeration frequencies through prescribed kernel expressions. The aggregates are generally not resolved geometrically and their internal contact structures are not represented.
+
+\subsubsection{Particle-Resolved Modeling of Aggregates}
+
+Discrete element methods represent an aggregate as an assembly of primary particles connected through contact or adhesive interactions. They can provide direct information about particle positions, coordination, contact forces, bond loading, restructuring, and bond rupture.
+
+When DEM is coupled with a fully resolved fluid model, the fluid motion around the individual primary particles can additionally be calculated. Particle-resolved CFD--DEM can therefore quantify hydrodynamic force distributions, shielding effects, local flow gradients, scalar transport, and the mechanical loading transmitted through the aggregate.
+
+These simulations provide information that is inaccessible to conventional CFD--PBM models. In particular, they allow aggregates with equal size but different morphology and connectivity to be subjected to identical external conditions and compared directly.
+
+Because of their high computational cost, however, particle-resolved simulations are restricted to individual aggregates, binary collisions, or small aggregate ensembles under canonical flow conditions. They cannot be applied directly to complete reactor-scale aggregate populations. Their main value for population modeling therefore lies in providing mechanistic reference data for reduced closure models.
+
+\subsubsection{Reduced and Data-Driven Representations of Aggregate Structure}
+
+Conventional scalar morphology descriptors, including porosity, fractal dimension, radius of gyration, coordination number, and shape factors, summarize selected aspects of aggregate structure. They are useful for comparing aggregate classes but may not uniquely describe the internal connectivity of an aggregate.
+
+Two aggregates may possess similar size, porosity, and fractal dimension while differing in the spatial distribution of contacts, load-bearing pathways, weakly connected branches, and exposed surface regions. Such differences may substantially affect their response to hydrodynamic loading and collisions.
+
+Graph-based representations provide a natural description of aggregates because primary particles can be represented as nodes and contacts or adhesive bonds as edges. Graph neural networks can process aggregates containing different numbers of primary particles and can combine geometric, mechanical, hydrodynamic, and transport-related features.
+
+In this context, a graph-based reduced state could retain structural information that is lost when an aggregate is represented only through its size and a limited set of averaged morphology descriptors. However, the suitability of such representations for developing population-balance closures for biological aggregates remains to be established.
+
+\subsubsection{Continuous-Time Models and Hydrodynamic History}
+
+Most PBM closures are memoryless. At a given time, the aggregation or deagglomeration rate is calculated from the current particle properties and the instantaneous local flow conditions.
+
+This assumption may be insufficient when aggregates undergo gradual restructuring, weakening, or cumulative bond damage. Two aggregates with the same current size and similar instantaneous morphology may respond differently if they have previously experienced different hydrodynamic loading histories.
+
+Continuous-time data-driven models, including Neural ODEs, provide a possible framework for introducing evolving internal state variables. Such variables may represent structural adaptation or accumulated mechanical damage and can be updated as an aggregate moves through changing flow conditions.
+
+The relevant question is not whether Neural ODEs can replace the physical models, but whether the inclusion of a learned internal state improves the prediction of aggregate evolution compared with instantaneous, memoryless closures.
+
+\subsubsection{Scope of Biological Growth and Viability}
+
+Biological growth, metabolic activity, and viability are important for the long-term evolution of cell aggregates. Their prediction requires biological kinetic information relating nutrient availability and other environmental conditions to cellular responses.
+
+Particle-resolved CFD--DEM can provide local transport quantities, such as oxygen or substrate concentrations and fluxes, but it does not directly generate biological growth, division, or death data. Such simulations alone therefore cannot be used to identify growth or viability kinetics.
+
+In the proposed project, biological growth and viability will not be learned from CFD--DEM simulations. If required for the final reactor-scale application, they will be included through established biological kinetic models or experimentally determined correlations. The particle-resolved learning framework will focus on aggregate morphology, hydrodynamic loading, restructuring, aggregation, mechanical damage, and deagglomeration.
+
+\subsubsection{Research Gap}
+
+The main limitation of current aggregate PBMs is not that they are mathematically restricted to particle size. Rather, the central problem is the absence of transferable and mechanistically informed closures that connect aggregate structure and hydrodynamic history to aggregation, restructuring, and deagglomeration.
+
+Existing approaches present several related limitations:
+
+\begin{enumerate}
+	\item Aggregate morphology is commonly represented through size alone or through a small number of prescribed scalar descriptors. The internal contact topology and spatial distribution of mechanically weak regions are not retained.
+	
+	\item CFD--PBM approaches provide spatially resolved environmental conditions but still require empirical or semi-empirical expressions to translate these conditions into aggregation and deagglomeration rates.
+	
+	\item Particle-resolved simulations can reveal morphology-dependent hydrodynamic and mechanical behavior, but no systematic method is available for transferring this high-dimensional information into computationally efficient PBM closures.
+	
+	\item Conventional closure models generally depend on instantaneous conditions and therefore cannot represent persistent restructuring or cumulative mechanical damage caused by previous hydrodynamic exposure.
+	
+	\item Kernels calibrated for one aggregate class or operating condition often have limited transferability to different morphologies, cohesion strengths, or reactor conditions.
+\end{enumerate}
+
+The opportunity for improvement therefore lies in developing reduced aggregate states that preserve the particle-scale structural information relevant to population dynamics and in describing how these states evolve under time-dependent hydrodynamic loading.
+
+The proposed hybrid framework addresses this need by using particle-resolved CFD--DEM to generate mechanistic reference data, graph-based models to identify structure-sensitive aggregate representations, and continuous-time models to describe restructuring and damage accumulation. The resulting reduced models will be used to formulate morphology-dependent and history-dependent aggregation and deagglomeration closures for reactor-scale PBMs.
+
+\subsection{Preliminary Work}
+
+
+\section{Objectives and Work Programme}
+
+\subsection{Objectives}
+
+The overall objective of the proposed project is to develop a hybrid multiscale modeling framework that transfers information from particle-resolved simulations of biological aggregates to reactor-scale population balance models.
+
+The project focuses on aggregate morphology, hydrodynamic loading, transport conditions, mechanical integrity, aggregation, restructuring, and deagglomeration. Biological growth and viability are treated as external biological processes and are not inferred from CFD--DEM data.
+
+The following four research hypotheses guide the project:
+
+\begin{enumerate}
+	
+	\item \textbf{H1:} Aggregate size alone is insufficient to predict hydrodynamic loading, transport behavior, restructuring, and deagglomeration. Graph-based representations of aggregate morphology provide additional predictive information beyond conventional scalar descriptors.
+	
+	\item \textbf{H2:} The response of an aggregate depends not only on its instantaneous structure and environmental conditions but also on its previous hydrodynamic and mechanical exposure. A history-aware Neural ODE can therefore predict aggregate evolution more accurately than a memoryless closure model.
+	
+	\item \textbf{H3:} Aggregation and deagglomeration closures can be learned from particle-resolved simulations in a transferable form that generalizes across aggregate sizes, morphologies, cohesion strengths, and hydrodynamic conditions not explicitly contained in the training data.
+	
+	\item \textbf{H4:} State-aware PBMs using graph-based and history-dependent closures provide more accurate reactor-scale predictions of aggregate population dynamics than conventional PBMs based only on aggregate size and instantaneous bulk conditions.
+	
+\end{enumerate}
+
+The four hypotheses are addressed through four interconnected work packages. Each work package produces a defined output that forms the basis for the next stage of the project.
+
+
+\subsection{Work Programme Including Proposed Research Methods}
+
+\subsubsection{WP1: Generation of Particle-Resolved and DEM-Based Aggregate Data}
+
+\paragraph{Objective and general strategy}
+
+The objective of WP1 is to generate a structured database describing the hydrodynamic loading, structural evolution, collision response, aggregation, and deagglomeration of model biological aggregates. The work package will combine high-fidelity particle-resolved direct numerical simulations with computationally less expensive DEM-only simulations.
+
+The two simulation levels serve different purposes. Particle-resolved CFD--DEM will be used to determine how the surrounding liquid and the instantaneous aggregate morphology affect the distribution of hydrodynamic loading within an aggregate. DEM-only simulations will be used for larger parameter studies in which the contact-mechanical and collision parameters must be varied systematically. Selected cases will be simulated with both approaches in order to determine when the simplified DEM-only treatment is sufficient and when fluid-mediated effects must be retained.
+
+The complete procedure consists of four steps:
+
+\begin{enumerate}
+	\item generation and mechanical calibration of bonded model aggregates;
+	
+	\item particle-resolved DNS--CFD--DEM simulations of single aggregates under controlled turbulent and canonical flow conditions;
+	
+	\item DEM-only simulations of binary aggregate collisions and mechanically prescribed loading histories;
+	
+	\item processing of the resulting particle, bond, fluid, collision, and deagglomeration data into graph-based trajectories and aggregate-level descriptors.
+\end{enumerate}
+
+\paragraph{WP1.1: Definition and generation of model aggregates}
+
+Individual biological cells will be represented by spherical primary particles. The initial reference system will use monodisperse particles to separate the influence of aggregate morphology from that of primary-particle size distribution. Polydispersity may subsequently be introduced as an additional variation if it is relevant for the selected biological system.
+
+The physical primary-particle diameter, density, and mechanical properties will not be selected as arbitrary DEM parameters. They will be defined for a specific reference cell or aggregate system using experimental data and values reported in the biological and biomechanical literature. The following quantities will be required:
+
+\begin{itemize}
+	\item representative primary-cell diameter and its variation;
+	
+	\item primary-particle density relative to the surrounding liquid;
+	
+	\item effective contact stiffness and damping;
+	
+	\item interparticle friction or tangential resistance;
+	
+	\item adhesive bond strength under normal, tangential, bending, and torsional loading;
+	
+	\item characteristic aggregate porosity, coordination number, and macroscopic strength.
+\end{itemize}
+
+Because cellular contacts and extracellular-matrix connections are not adequately represented by a purely distance-dependent van der Waals force, aggregate integrity will be modeled using finite-strength adhesive bonds. A parallel-bond-type model will be employed in which an adhesive connection can transfer normal and tangential forces as well as bending and torsional moments. Bond rupture occurs when a prescribed stress- or force-based failure criterion is exceeded.
+
+The microscopic bond parameters will be calibrated against aggregate-scale mechanical targets rather than assigned independently. Depending on the availability of experimental data, the calibration targets may include aggregate compression response, effective elastic modulus, tensile strength, critical shear stress, or force required to separate two connected cells. If no complete experimental dataset is available, a physically plausible parameter range will be defined and propagated through the simulations as an explicit uncertainty range.
+
+Several controlled aggregate classes will be generated. The initial design will include aggregates consisting of approximately
+
+\begin{equation}
+	N_p \in {50,100,250,500}
+\end{equation}
+
+primary particles. A limited number of larger aggregates containing approximately $1000$ primary particles will be considered for scale-generalization tests if computational resources permit.
+
+For each particle number, several structural classes will be created:
+
+\begin{itemize}
+	\item compact approximately spherical aggregates;
+	
+	\item porous aggregates with controlled void fraction;
+	
+	\item fractal or diffusion-limited structures with controlled fractal dimension;
+	
+	\item anisotropic or elongated aggregates;
+	
+	\item aggregates with intentionally introduced weakly connected regions.
+\end{itemize}
+
+The structural variation will allow aggregates with similar mass or equivalent diameter but different contact topology to be compared directly.
+
+Each generated aggregate will first undergo a relaxation and stabilization procedure in DEM. The aggregate will be considered mechanically equilibrated when its total kinetic energy, maximum particle velocity, and unbalanced contact force remain below prescribed tolerances for a defined relaxation interval. The resulting particle positions, contact network, bond forces, porosity, coordination number, radius of gyration, and principal dimensions will be stored as the initial aggregate state.
+
+\paragraph{WP1.2: Particle-resolved DNS--CFD--DEM simulations}
+
+The high-fidelity simulations will be performed using resolved CFDEM coupling based on a fictitious-domain or immersed-boundary treatment. The fluid motion around the individual primary particles will be spatially resolved. No unresolved drag correlation will therefore be used as the primary description of the fluid--particle interaction.
+
+The fluid equations will be solved by direct numerical simulation. This means that the instantaneous flow field and all dynamically relevant turbulent scales represented in the computational domain will be resolved without applying a RANS turbulence model. The designation DNS refers here to the fluid-phase treatment, while the moving primary particles and their interactions are resolved through the coupled DEM model.
+
+The principal turbulent setup will consist of a triply periodic cubic domain containing one initially stabilized aggregate. Homogeneous isotropic turbulence will be maintained through large-scale forcing. The periodic box provides a controlled environment in which turbulence intensity, dissipation rate, Kolmogorov scales, and aggregate-to-flow scale ratios can be varied independently of reactor geometry.
+
+The simulation procedure will consist of the following stages:
+
+\begin{enumerate}
+	\item A single-phase turbulent flow will first be generated in the periodic domain.
+	
+	\item The flow will be continued until statistically stationary turbulence is obtained. Stationarity will be assessed from the time evolution of the domain-averaged kinetic energy, dissipation rate, and selected velocity statistics.
+	
+	\item A mechanically equilibrated aggregate will then be inserted into the statistically stationary flow field.
+	
+	\item The coupled DNS--CFD--DEM simulation will be continued while resolving particle motion, fluid--particle momentum transfer, contact loading, bond deformation, restructuring, and possible bond rupture.
+\end{enumerate}
+
+The box size and numerical resolution will be selected through preliminary grid and domain-size studies. Each primary particle must be represented by a sufficient number of CFD cells across its diameter to obtain converged hydrodynamic forces and local flow gradients. The periodic domain must also be sufficiently larger than the aggregate to minimize direct interaction with its periodic images.
+
+The primary control parameters will include:
+
+\begin{itemize}
+	\item aggregate particle number and equivalent diameter;
+	
+	\item aggregate morphology, porosity, and anisotropy;
+	
+	\item bond strength and bond-stiffness parameters;
+	
+	\item turbulent Reynolds number;
+	
+	\item mean turbulent energy-dissipation rate;
+	
+	\item ratio between aggregate size and Kolmogorov length scale;
+	
+	\item primary-particle and aggregate Stokes numbers;
+	
+	\item fluid viscosity and density;
+	
+	\item optional scalar diffusivity and surface-consumption boundary conditions.
+\end{itemize}
+
+A full factorial variation of all parameters would be computationally infeasible. The high-fidelity database will therefore be constructed using a staged design. First, a baseline aggregate and flow case will be used for verification, grid convergence, and time-step sensitivity. Second, individual physical groups will be varied systematically. Finally, a space-filling design will be used for the combined parameter study.
+
+In addition to homogeneous isotropic turbulence, selected canonical flows may be included to isolate individual loading mechanisms. These may comprise simple shear flow, planar extensional flow, and controlled oscillatory loading. Such cases provide interpretable reference conditions for determining how aggregate response changes between approximately steady and strongly fluctuating hydrodynamic forcing.
+
+\paragraph{Stopping criteria for the particle-resolved simulations}
+
+A simulation will not be stopped merely after an arbitrary fixed physical time. Different stopping criteria will be applied depending on the observed aggregate response.
+
+For non-deagglomerating aggregates, the simulation will continue until the aggregate has experienced a prescribed number of large-eddy turnover times and its structural descriptors have either reached a statistically stationary regime or shown no systematic change over a defined observation window.
+
+For restructuring cases, the simulation will continue until the principal structural quantities, including porosity, coordination number, radius of gyration, and contact topology, approach a new statistically stable state.
+
+For deagglomerating cases, the simulation will continue beyond the first bond rupture. It will be stopped only after the resulting connected components are clearly separated and their particle membership no longer changes over a prescribed interval. This is necessary to distinguish a local bond rupture from an actual deagglomeration event.
+
+A deagglomeration event will be defined using the connectivity graph of the aggregate. The original aggregate is considered separated when its bond graph splits into two or more persistent connected components. The daughter components must remain disconnected and move apart for a minimum confirmation interval.
+
+Additional safety stopping criteria will include excessive particle displacement, loss of numerical stability, violation of the target Courant number, or completion of a predefined maximum exposure time.
+
+\paragraph{Data sampled from particle-resolved simulations}
+
+The stored data will be divided into fluid-level, particle-level, bond-level, and aggregate-level quantities.
+
+At the fluid level, the following quantities will be sampled:
+
+\begin{itemize}
+	\item instantaneous velocity and pressure fields;
+	
+	\item local velocity-gradient and strain-rate tensors;
+	
+	\item turbulent kinetic energy and dissipation-related descriptors;
+	
+	\item immersed-boundary or fictitious-domain forcing field;
+	
+	\item optional oxygen or substrate concentration fields and surface fluxes.
+\end{itemize}
+
+At the primary-particle level, the following quantities will be stored:
+
+\begin{itemize}
+	\item particle position, velocity, and angular velocity;
+	
+	\item hydrodynamic force and torque;
+	
+	\item particle acceleration;
+	
+	\item local fluid velocity and local velocity-gradient descriptors;
+	
+	\item local scalar concentration and flux, if scalar transport is included;
+	
+	\item particle coordination number and surface-exposure indicators.	
+\end{itemize}
+
+At the bond level, the following quantities will be sampled:
+
+\begin{itemize}
+	\item identities of the two connected particles;
+	
+	\item normal and tangential bond forces;
+	
+	\item bending and torsional moments;
+	
+	\item bond deformation and normalized loading;
+	
+	\item bond age;
+	
+	\item time and mode of bond rupture.
+\end{itemize}
+
+At the aggregate level, the following descriptors will be calculated:
+
+\begin{itemize}
+	\item total particle number and number of connected components;
+	
+	\item equivalent diameter and radius of gyration;
+	
+	\item porosity or compactness;
+	
+	\item coordination-number distribution;
+	
+	\item principal dimensions and anisotropy;
+	
+	\item fractal dimension, where applicable;
+	
+	\item total hydrodynamic force and torque;
+	
+	\item distributions and extrema of particle and bond loading;
+	
+	\item number and spatial distribution of broken bonds;
+	
+	\item daughter sizes and daughter morphologies after deagglomeration.
+\end{itemize}
+
+The complete fields will be written only at selected times because storing every CFD field at every coupling step would be prohibitively expensive. Particle and bond quantities will be sampled at a higher temporal frequency than the complete three-dimensional flow fields. Event-triggered output will additionally be used around bond-rupture, restructuring, collision, and deagglomeration events.
+
+\paragraph{WP1.3: DEM-only simulations}
+
+DEM-only simulations will be used to explore parameter combinations that cannot be covered economically using particle-resolved CFD--DEM. Their purpose is not to replace the high-fidelity liquid-phase simulations, but to isolate contact-mechanical mechanisms and generate statistically meaningful collision-outcome data.
+
+The main DEM-only application will be the simulation of binary collisions between two initially stabilized aggregates. A typical setup will consist of two aggregates positioned at a prescribed initial separation. Translational and, where relevant, rotational velocities will be assigned to produce a specified relative velocity and collision geometry.
+
+The principal collision parameters will include:
+
+\begin{itemize}
+	\item particle numbers and size ratio of the two aggregates;
+	
+	\item morphology and orientation of both aggregates;
+	
+	\item relative collision velocity;
+	
+	\item impact parameter or collision angle;
+	
+	\item initial angular velocities;
+	
+	\item normal, tangential, bending, and torsional bond strengths;
+	
+	\item contact stiffness, damping, and friction;
+	
+	\item structural heterogeneity or intentionally weakened regions.
+\end{itemize}
+
+The collision simulations will classify the final outcome as:
+
+\begin{itemize}
+	\item rebound without persistent structural change;
+	
+	\item rebound after restructuring or erosion;
+	
+	\item temporary contact followed by separation;
+	
+	\item permanent sticking;
+	
+	\item sticking accompanied by restructuring;
+	
+	\item collision-induced deagglomeration of one or both aggregates.
+\end{itemize}
+
+For each parameter combination, repeated simulations with different orientations and aggregate realizations will be performed. This provides a probability distribution of collision outcomes rather than a single deterministic label.
+
+The DEM-only simulations will also be used for controlled mechanical loading experiments. An aggregate may be subjected to prescribed force, torque, shear-like differential forcing, cyclic loading, or sequences of loading and relaxation. These simulations will establish whether the aggregate response depends on its loading history even when the instantaneous loading is identical.
+
+The absence of an explicitly resolved fluid in these simulations substantially reduces the computational cost and allows systematic variation of collision and bond parameters. However, DEM-only results cannot automatically be interpreted as collisions in vacuum or transferred directly to liquid systems. The initial velocities and damping parameters will be selected to represent collision conditions obtained from reactor-scale flow estimates or sampled from the particle-resolved simulations.
+
+Selected DEM collision cases will therefore be repeated with fully resolved CFD--DEM. The comparison will quantify changes caused by liquid-mediated viscous dissipation, hydrodynamic shielding, and fluid forces during approach and separation. From this comparison, a domain of validity for the DEM-only collision model will be established.
+
+\paragraph{Stopping criteria for DEM-only collision simulations}
+
+A binary collision simulation will be considered complete when one of the following persistent outcomes has been reached:
+
+\begin{enumerate}
+	\item the aggregates have separated beyond a prescribed distance and their relative motion indicates continued separation;
+	
+	\item a stable combined aggregate has formed, its contact topology remains unchanged, and its kinetic energy has fallen below a prescribed tolerance;
+	
+	\item one or both aggregates have separated into persistent connected components whose membership remains unchanged over a confirmation interval;
+	
+	\item a predefined maximum simulation time has been reached without a clear classification.
+\end{enumerate}
+
+Cases reaching the maximum time without a stable classification will be labeled as unresolved or long-duration contacts and analyzed separately rather than forced into a sticking or rebound class.
+
+\paragraph{WP1.4: Data processing and preparation for machine learning}
+
+The raw simulation data will be transformed into synchronized aggregate trajectories. At each sampled time, the aggregate contact network will be converted into a graph in which primary particles form the nodes and active adhesive bonds form the edges.
+
+Node features will be assembled from particle position, motion, hydrodynamic loading, local flow descriptors, coordination, and optional scalar-transport quantities. Edge features will be assembled from bond forces, moments, deformation, age, strength, and rupture state.
+
+The raw quantities will be converted into dimensionless or normalized form wherever possible. Relevant dimensionless groups will include Reynolds, Stokes, cohesion, and aggregate-to-turbulence scale ratios. This step is required to improve transferability across particle sizes, fluid properties, and operating conditions.
+
+Each trajectory will be assigned labels and targets including:
+
+\begin{itemize}
+	\item time-dependent aggregate morphology;
+	
+	\item restructuring rate;
+	
+	\item accumulated and localized mechanical loading;
+	
+	\item time to first bond rupture;
+	
+	\item time to persistent deagglomeration;
+	
+	\item deagglomeration frequency or event probability;
+	
+	\item daughter-particle-number and daughter-size distributions;
+	
+	\item binary collision outcome;
+	
+	\item sticking probability under specified collision conditions;
+	
+	\item post-collision aggregate morphology.
+\end{itemize}
+
+Training, validation, and test datasets will be separated by complete aggregate realizations and operating conditions rather than by randomly dividing individual time steps. In addition, selected particle numbers, morphologies, bond strengths, and flow conditions will be withheld entirely from training to evaluate generalization.
+
+The final outputs of WP1 are:
+
+\begin{enumerate}
+	\item a calibrated bonded-particle representation of model biological aggregates;
+	
+	\item a particle-resolved DNS--CFD--DEM database for single-aggregate loading, restructuring, and deagglomeration;
+	
+	\item a DEM-only database of binary collision outcomes and controlled loading histories;
+	
+	\item a cross-validation dataset comparing DEM-only and fluid-resolved collision simulations;
+	
+	\item graph-structured, time-resolved datasets for the development of the GNN and Neural ODE models in the subsequent work packages.
+\end{enumerate}
+
+
+\subsubsection{WP2: Graph-Based Representation of Aggregate Structure}
+
+The objective of WP2 is to develop a reduced representation of biological aggregates from the particle-resolved data generated in WP1.
+
+Each aggregate will be represented as a graph:
+
+\begin{equation}
+	\mathcal{G}_a(t)
+	=
+	\left(
+	\mathcal{V}_a(t),
+	\mathcal{E}_a(t)
+	\right),
+\end{equation}
+
+where the nodes $\mathcal{V}_a$ represent primary particles and the edges $\mathcal{E}_a$ represent contacts or adhesive bonds.
+
+Node features will contain particle-level information including relative particle position, local coordination, oxygen and substrate concentrations, hydrodynamic forces, particle motion, and local flow descriptors.
+
+Edge features will contain mechanical information including normal and tangential bond forces, bond moments, bond age, and remaining bond strength.
+
+A graph neural network encoder will map the particle-resolved aggregate graph onto a reduced representation:
+
+\begin{equation}
+	\mathbf{z}_a
+	=
+	\mathcal{E}_{\theta}
+	\left(
+	\mathcal{G}_a
+	\right),
+\end{equation}
+
+where $\mathbf{z}_a$ represents a low-dimensional aggregate state.
+
+The graph representation will be trained to retain information relevant to aggregate morphology, internal transport limitations, mechanical integrity, restructuring, and deagglomeration.
+
+Auxiliary prediction tasks will be introduced to improve the physical interpretability of the learned representation. These may include the prediction of aggregate porosity, effective mass-transfer properties, mechanical damage indicators, and deagglomeration propensity.
+
+The GNN-based representation will be compared with simpler models using only aggregate size and conventional morphology descriptors. This comparison provides the direct test of Hypothesis H1.
+
+The main output of WP2 is a validated graph-based reduced representation that maps aggregates with variable numbers of primary particles onto a common low-dimensional state space.
+
+
+\subsubsection{WP3: History-Aware Neural ODE Closures for Aggregate Evolution}
+
+The objective of WP3 is to develop continuous-time reduced models describing aggregate restructuring and mechanical damage under changing environmental conditions.
+
+The interpretable aggregate state is defined as:
+
+\begin{equation}
+	\mathbf{x}_a
+	=
+	\begin{bmatrix}
+		\phi_a \\
+		D_a
+	\end{bmatrix},
+\end{equation}
+
+where $\phi_a$ denotes an aggregate structural variable such as porosity or compactness and $D_a$ denotes an accumulated mechanical-damage variable.
+
+The temporal evolution of the aggregate state will be described by a hybrid Neural ODE:
+
+\begin{equation}
+	\frac{\mathrm{d}\mathbf{x}_a}{\mathrm{d}t}
+	=
+	\mathbf{f}_{\theta}
+	\left(
+	\mathbf{x}_a,
+	\mathbf{z}_a,
+	\mathbf{u}_a
+	\right),
+\end{equation}
+
+where $\mathbf{z}_a$ is the graph-based morphology representation from WP2 and $\mathbf{u}_a$ contains environmental and mechanical information obtained from CFD--DEM.
+
+The system is written component-wise as:
+
+\begin{equation}
+	\begin{aligned}
+		\frac{\mathrm{d}\phi_a}{\mathrm{d}t}
+		&=
+		f_{\phi,\theta}
+		\left(
+		\phi_a,
+		D_a,
+		\mathbf{z}_a,
+		\mathbf{u}_a
+		\right), \\
+		\frac{\mathrm{d}D_a}{\mathrm{d}t}
+		&=
+		f_{D,\theta}
+		\left(
+		\phi_a,
+		D_a,
+		\mathbf{z}_a,
+		\mathbf{u}_a
+		\right).
+	\end{aligned}
+\end{equation}
+
+The environmental input vector may be defined as:
+
+\begin{equation}
+	\mathbf{u}_a
+	=
+	\begin{bmatrix}
+		\varepsilon_a \\
+		\dot{\gamma}_a \\
+		\mathcal{S}_a \\
+		\mathcal{B}_a
+	\end{bmatrix},
+\end{equation}
+
+where $\varepsilon_a$ is the local turbulent energy-dissipation rate, $\dot{\gamma}_a$ is a strain-rate descriptor, $\mathcal{S}_a$ contains hydrodynamic-loading statistics, and $\mathcal{B}_a$ contains bond-state and bond-rupture statistics.
+
+The Neural ODE will learn how repeated hydrodynamic loading and internal bond stresses produce morphological restructuring and accumulate into a changing damage state.
+
+To test Hypothesis H2, the history-aware model will be compared with memoryless models of the form:
+
+\begin{equation}
+	S_{b,a}
+	=
+	g_{b,\theta}
+	\left(
+	\mathbf{z}_a,
+	\mathbf{u}_a
+	\right),
+\end{equation}
+
+which use only the instantaneous state and operating conditions.
+
+A non-negative deagglomeration frequency will be predicted from the evolving morphology and damage states:
+
+\begin{equation}
+	S_{b,a}
+	=
+	g_{b,\theta}
+	\left(
+	\phi_a,
+	D_a,
+	\mathbf{z}_a,
+	\mathbf{u}_a
+	\right).
+\end{equation}
+
+The probability of a deagglomeration event within a time interval $\Delta t$ is then given by:
+
+\begin{equation}
+	P_{\mathrm{deagg},a}
+	\left(
+	\Delta t
+	\right)
+	=
+	1
+	-
+	\exp
+	\left(
+	-S_{b,a}\Delta t
+	\right).
+\end{equation}
+
+The corresponding daughter-size distribution will be learned from deagglomeration events observed in the particle-resolved simulations.
+
+Aggregation will be treated using a pairwise model. The graph representations of two colliding aggregates, together with relative velocity, collision geometry, aggregate size, and mechanical properties, will be used to predict the probability of permanent aggregation:
+
+\begin{equation}
+	P_{\mathrm{stick},ij}
+	=
+	g_{\mathrm{agg},\theta}
+	\left(
+	\mathbf{z}_i,
+	\mathbf{z}_j,
+	\mathbf{q}_{ij}
+	\right),
+\end{equation}
+
+where $\mathbf{q}_{ij}$ contains the collision conditions.
+
+The resulting aggregation kernel will be expressed as:
+
+\begin{equation}
+	K_{ij}^{\mathrm{agg}}
+	=
+	\beta_{ij}^{\mathrm{coll}}
+	P_{\mathrm{stick},ij},
+\end{equation}
+
+where $\beta_{ij}^{\mathrm{coll}}$ denotes the collision frequency obtained from the reactor-scale flow and population model.
+
+WP3 tests Hypothesis H2 through the comparison between history-aware and memoryless closures. It also tests Hypothesis H3 through validation on unseen aggregate morphologies, cohesion strengths, and hydrodynamic conditions.
+
+The main outputs of WP3 are a history-aware Neural ODE for morphology and damage evolution, a deagglomeration-frequency closure, a daughter-size distribution, and a pairwise collision-efficiency model.
+
+
+\subsubsection{WP4: Integration into State-Aware Population Balance Models}
+
+The objective of WP4 is to integrate the developed closure models into a population balance framework applicable to reactor-scale simulations.
+
+The PBM will describe aggregate populations using conventional internal coordinates such as aggregate size, augmented by reduced aggregate-state information where required.
+
+The graph-based and Neural ODE models will provide closures for aggregation, restructuring, and deagglomeration without requiring particle-resolved simulations at reactor scale.
+
+Growth and viability will not be predicted from CFD--DEM or learned within the particle-resolved framework. If they are required for a specific bioprocess application, they will be incorporated as external biological source terms based on established kinetic models or experimental correlations.
+
+The resulting PBM framework will be coupled to coarse CFD simulations providing spatially and temporally varying hydrodynamic and transport conditions.
+
+The model will predict aggregate-size distributions, structural-state distributions, aggregation dynamics, deagglomeration rates, and the response of aggregate populations to changing reactor operating conditions.
+
+The state-aware PBM will be compared against conventional PBMs using size-dependent and memoryless closures. Validation will be performed using unseen particle-resolved simulations, dilute multi-aggregate simulations, and available experimental population data.
+
+WP4 tests Hypothesis H4 by determining whether the graph-based and history-dependent closures improve population-level predictions. It also provides the final system-level test of Hypothesis H3.
+
+The main output of WP4 is a reactor-scale hybrid multiscale simulation framework linking particle-resolved aggregate physics to population-level bioprocess predictions.
+\medskip 
+
+Table \ref{tab:plan} summarizes the entire work programme.
+
+%----------------------------------------------------------------------------
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%  T  A  B  E  L  L  E  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{table}[htb]
+%%\footnotesize
+\small
+\begin{center}
+\renewcommand{\arraystretch}{1.0}
+\begin{tabular}{|l|@{\hspace{-1.15mm}}p{2.0cm}@{\hspace{1.1mm}}|
+                   @{\hspace{-1.15mm}}p{2.1cm}@{\hspace{1.1mm}}|
+                   @{\hspace{-1.15mm}}p{2.0cm}@{\hspace{1.1mm}}|c|}
+\hline
+%% \rowcolor{dunkelgrau}
+& & & & \\*[-1.0ex]
+\textbf{\textsf{Work packages}} & 
+ \rule[-6mm]{0mm}{0mm}{~~first year} & {\hspace{6pt}second year} & {~~~third 
+ year} & PM 
+ \\*[-2ex]
+\hline
+%%%%%%                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hline
+ \rowcolor{dunkelgrau} \multicolumn{5}{l}{~}  \\*[-1.0ex]
+\rowcolor{dunkelgrau} \multicolumn{5}{l}{
+ \textbf{\textsf{Objective A: Generation of breakup database}}} \\*[1ex]
+\hline  \hline
+\rule[0mm]{0mm}{3.80mm} \parbox[b]{8.4cm}{\baselineskip1.0ex \vspace{1mm}
+       \textbf{\textsf{A~1}}: Generation of agglomerates with specific 
+       morphologies}
+                        & \balken{0cm}{0.35cm}& & & 2 \\ \hline
+\rule[0mm]{0mm}{4.0mm} \parbox[b]{8.4cm}{\baselineskip1.0ex \vspace{1mm}
+        \textbf{\textsf{A~2}}: Extensive DNS-DEM simulations for individual 
+        agglomerates}                        & \balken{0.35cm}{2cm} & & & 
+        12 
+        \\ \hline
+%\rule[0mm]{0mm}{4.0mm}  \parbox[b]{8.4cm}{\baselineskip1.0ex 
+%        \textbf{\textsf{A~3}}: Evaluation and comparison of both formulations}
+%                        & &  \balken{0.cm}{1.cm} &  & 2 \\ \hline
+%%%%%%               %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hline
+%\rowcolor{dunkelgrau}
+% & & & & \\*[-1.0ex]
+\rowcolor{dunkelgrau} \multicolumn{5}{l}{~}  \\*[-1.0ex]
+\rowcolor{dunkelgrau} \multicolumn{5}{l}{\textbf{\textsf{Objective B: 
+Analyzing the deagglomeration behavior for deeper 
+			physical insight }}}  \\*[1ex]
+\hline  \hline
+\rule[0mm]{0mm}{3.80mm} \parbox[b]{8.40cm}{\baselineskip1.0ex 
+       \textbf{\textsf{B~1}}: In-depth physical analysis}
+                        & \balken{1.7cm}{1.4cm}& & &  4 \\ \hline
+\rule[0mm]{0mm}{3.80mm} \parbox[b]{8.40cm}{\baselineskip1.0ex 
+        \textbf{\textsf{B~2}}: Validation of existing theory-based models}
+                        &  &\balken{1.07cm}{0.35cm} & & 2\\ 
+                        \hline
+%
+%%%%%%               %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hline
+ \rowcolor{dunkelgrau} \multicolumn{5}{l}{~}  \\*[-1.0ex]
+ \rowcolor{dunkelgrau} \multicolumn{5}{l}{\textbf{\textsf{Objective C: 
+Developing a novel model for the fluid-induced 
+agglomerate breakup using }}}  \\*[0.5ex]
+ \rowcolor{dunkelgrau} 
+ \multicolumn{5}{l}{\textbf{\textsf{\hspace*{2.15cm}machine learning and 
+ incorporating 
+ it into the E--L framework }}}  \\*[1.0ex]
+\hline  \hline
+\rule[0mm]{0mm}{4.0mm} \parbox[b]{8.40cm}{\baselineskip1.0ex \vspace{1mm}
+       \textbf{\textsf{C~1}}: Assessment of different machine-learning 
+       techniques (Symbolic regression based on sparse regression 
+       or genetic 
+       programming)}
+                        & &  \balken{0.75cm}{1.4cm} & &  4 \\ \hline
+\rule[0mm]{0mm}{4.0mm} \parbox[b]{8.40cm}{\baselineskip1.0ex 
+        \textbf{\textsf{C~2}}: Designing and training the novel model}
+                        & &  \balken{1.7cm}{1.43cm} & & 6 \\ \hline
+\rule[0mm]{0mm}{4.0mm} \parbox[b]{8.20cm}{\baselineskip1.0ex \vspace{1mm}
+	\textbf{\textsf{C~3}}: Incorporation of the novel model into the E--L 
+	framework}      & & & \balken{1.cm}{.16cm} & 1 \\ 
+	\hline                  
+\rule[0mm]{0mm}{4.0mm} \parbox[b]{8.20cm}{\baselineskip1.0ex 
+                        	\textbf{\textsf{C~4}}: Study of 
+                        	practically relevant test cases}
+                        & & & \balken{1.17cm}{.84cm} & 4 \\ \hline
+
+%%%%%%                  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hline
+\rule[0mm]{0mm}{3.5mm} \parbox[b]{8.20cm}{\baselineskip1.0ex \vspace{1mm}
+                       Documentation and publication of the results including 
+                       storage of main data in NFDI}
+                       &\balken{1.80cm}{0.2cm} & 
+                        \balken{1.80cm}{0.2cm} & 
+                        \balken{1.80cm}{0.2cm} & 1\\ \hline
+\end{tabular}
+\renewcommand{\arraystretch}{1.0}
+\end{center}
+\vspace*{-0.1cm}
+\caption{Time schedule of the work packages within the project 
+           (PM = person-months).
+         \label{tab:plan}}
+\end{table}
+%-----------------------------------------------------------------------------
+\clearpage
+%------------------------------------------------------------------------------
+\subsection{Handling of research data \label{subsection:data}}
+\def\mbsubsecname{Data Handling}
+
+As done for previous test cases related to FSI studies, all data which
+might be interesting for the entire community will be made available
+online including a detailed documentation and best practice
+advices. For this purpose, a membership application will be submitted
+to the German National Research Data Infrastructure for Engineering
+Sciences (NFDI4Ing) headed by RWTH Aachen to securely store the
+primary data as well as the source codes and scripts for their
+analysis. These data will be prepared in compliance with the
+established recommendations of this organization to assure a proper
+research data management (RDM) that implements the FAIR data
+principles: Data has to be findable, accessible, interoperable, and
+re-usable.  With regard to the seven derived archetypes being
+representative for the majority of the engineering sciences, DORIS
+(high performance measurement \& computation) fits best to the current
+project.
+
+%-----------------------------------------------------------------------------
+
+\subsection{Relevance of sex, gender and/or diversity}
+\def\mbsecname{Other Information}
+
+As is customary with job postings at HSU Hamburg, we will specifically look for 
+female applicants and, if appropriate, invite them to apply. Increasing the 
+proportion of women, particularly in technical/scientific subjects, is a high 
+priority at HSU.\\
+
+
+
+%---------------------------------------------------------------------------
+
+\section{Project- and subject-related list of publications}
+Ten own publications that are most relevant to the project are highlighted in 
+red. 
+\vspace{0.3cm}
+% decrease the spacing between biblist entries
+\setlength\bibitemsep{2pt}
+%\AtNextBibliography{\small}
+\renewcommand*{\bibfont}{\normalfont\fontsize{9}{11}\selectfont}
+\printbibliography[heading=none]%bibintoc]
+%\printbibliography[title={Category A Bibliography}, filter=important]
+%\printbiblist[title={short list},keyword=important]{shorttitle}
+%-----------------------------------------------------------------------------
+\pagebreak
+
+\pagenumbering{arabic}
+ % inner header
+\ihead{DFG form 53.01 – 03/25}
+% outer header with page number and "out of maximum 18"
+\ohead*{\pagemark\ out of maximum 8}
+
+\section{Supplementary information on the research context}
+\subsection{Ethical and/or legal aspects of the project}
+
+\subsubsection{General ethical aspects}
+\qquad \quad No statement by an ethics committee is required. 
+
+\subsubsection{Descriptions of proposed investigations involving humans, 
+human 
+materials or identifiable data}
+\qquad \quad Not applicable
+
+\subsubsection{Descriptions of proposed investigations involving experiments on 
+animals}
+\qquad \quad Not applicable
+
+\subsubsection{Descriptions of projects involving genetic resources (or 
+associated traditional knowledge) from a foreign country}
+\qquad \quad Not applicable
+
+\subsubsection{Explanations regarding any possible safety-related aspects}
+
+\paragraph{4.1.5.1 “Dual Use Research of Concern”; foreign trade 
+law}~\\*[-1ex]
+
+\qquad \quad Not applicable
+
+\paragraph{4.1.5.2 Risks in international cooperation}~\\*[-1ex]
+
+\qquad \quad Not applicable
+
+\subsubsection{Considerations on aspects of ecological sustainability in the 
+planning and implementation of the project}
+
+In planning and implementing the proposed project, we have carefully
+considered ecological sustainability, particularly in terms of travel
+and computational resource usage.
+
+\paragraph{Travel Activities:}
+
+The project includes a travel budget intended primarily for essential
+scientific exchange and networking, especially for early-career
+researchers. Whenever possible, we will prioritize digital
+communication (e.g., virtual meetings and workshops) to minimize
+travel-related emissions. In cases where physical travel is necessary,
+we will aim to combine multiple goals per trip, choose direct flights
+when available, and explore alternative lower-emission transport modes
+such as a train journey. Hybrid or fully virtual formats will be
+preferred for project-related events such as workshops and symposia to
+reduce travel needs.
+
+\paragraph{Computational Resources:}
+
+Given the computationally intensive nature of DNS-DEM simulations, we
+will implement several measures to reduce environmental impact:
+
+  \begin{itemize}
+     \item All simulations will be hypothesis-driven and planned to
+       avoid redundant computations.
+
+     \item We will monitor and document our computing resource usage
+       (e.g., core hours, CPU time,) and estimate the associated
+       CO$_2$ emissions for increased awareness (now available in
+       SLURM). Our compute cluster HSUper was recently listed in the
+       Green-Top500 list due to high energy efficiency achieved by
+       cold water cooling.
+
+     \item Reusability of simulation data will be ensured through
+       thorough documentation, centralized storage, and potential
+       public sharing, thus reducing the need for future redundant
+       simulations.
+  \end{itemize}
+
+Overall, our approach is to achieve scientific excellence while
+maintaining a conscious and responsible use of resources throughout
+the project lifecycle.
+
+
+
+\subsection{Employment Status Information}
+
+\begin{quote}
+	\begin{tabbing}
+		xxxxxxxxxxxxxxxxxxx \=
+		xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+		\kill
+	    Name:                \> Dr.-Ing.\ Ali Khalifa\\
+		Official position:   \> Scientific co-worker (PostDoc)\\ 
+	    Employment status:   \> Fixed-term contract presently until 
+	    31.12.2026 
+	    \\
+%	    					 \>funded	by Interne Forschungsförderung \\
+	    							
+		Institution:         \> Helmut-Schmidt-University Hamburg (HSU) \\*[2ex]
+		Name:                \> Univ.-Prof.\ Dr.-Ing.\ habil.\ Michael Breuer\\
+		Official position:   \> Permanent professor, head of the department \\
+		Institution:         \> Helmut-Schmidt-University Hamburg (HSU) 
+	\end{tabbing}
+\end{quote}
+
+%\vspace*{-0.3cm}
+\clearpage
+\subsection{First-time proposal data}
+\begin{enumerate}
+\item[] Dr.-Ing. Khalifa, Ali
+
+\medskip
+
+ Dr.-Ing.\ A.\ Khalifa is a postdoctoral researcher at the
+ department. He has a demonstrated experience in the multiscale
+ modeling and simulation of cohesive particle-laden flows using
+ data-driven approaches. He will supervise the project together with 
+ Prof. Breuer.
+
+Dr.-Ing. Khalifa finished his PhD in September 2022 at HSU Hamburg
+with the highest grade, i.e. summa cum laude.  He then successfully
+applied for a one-year funding at the \textit{Interne
+  Forschungsförderung (IFF)} of HSU.  The IFF funding was installed at
+HSU a few years ago to give young and promising scientists the chance
+to conscientiously prepare and submit their own DFG application. After
+a competitive selection process with a written application and an oral
+presentation of the project idea, the proposal of Dr.-Ing. Khalifa was
+selected from a variety of suggested projects for a start-up funding
+of 1 year (July 1, 2023 to June 30, 2024). This funding is linked to
+the explicit requirement to submit a DFG application during the course
+of the project. In spring 2024 Dr.-Ing.\ Khalifa received the
+"Wissenschaftspreis der Gesellschaft der Freunde und Förderer der HSU
+Hamburg" for his excellent PhD thesis.
+
+%Besides the exceptional research facilities at the HSU,
+%Dr.-Ing. Khalifa is willing to undertake his PostDoc at his PhD alma
+%mater, driven by familial commitments such as ensuring continuity for
+%his spouse's job and maintaining stability for his children's
+%environment.
+
+Prior to this proposal, Dr.-Ing.\ Khalifa submitted a related proposal
+to the DFG, along with a revised version, which was ultimately not
+recommended for funding. The main criticism of the original submission
+was the use of neural networks for developing the deagglomeration
+model, which was viewed as lacking physical interpretability. In the
+revised version with new reviewers, although this issue was fully addressed, the
+proposal was considered to place too much emphasis on modeling
+and not enough on the physical analysis of the deagglomeration
+process.
+
+In the new proposal, both points of criticism have been carefully addressed. 
+First, we prioritize the use of symbolic regression and plan to evaluate 
+various techniques for extracting models from particle-resolved simulation 
+data. This
+approach ensures that the resulting model is physically
+interpretable, as demonstrated in the attached preliminary
+study. Furthermore, the proposal places greater emphasis on the physical 
+mechanisms underlying
+deagglomeration, ensuring a balanced integration of modeling and
+physical analysis.
+
+% {\color{blue} To gain experiences with external research
+%  stays and international collaborations, two research visits at the
+%  University of Michigan are planned as detailed in
+%  Section~\ref{sec:travcost}{\color{violet}.2}.}
+\end{enumerate}
+\subsection{Composition of the Project Group}
+
+%% \subsubsection*{Grundausstattung}
+
+\begin{enumerate}
+	
+	
+\item[]	Univ.-Prof.\ Dr.-Ing.\ habil.\ M.\ Breuer is the head of the
+	Department of Fluid Mechanics at the HSU Hamburg. Together with Dr. Khalifa 
+	he supervises the
+	project and support the PhD candidate during the project.
+	
+\end{enumerate}
+
+%%\subsubsection*{Sachbeihilfe / Wissenschaftliche Mitarbeiter(innen)}
+%%
+%%\begin{itemize}
+%%  \item[\textbf{a)}] Herr M.Sc.\ N.\ Almohammed arbeitet bereits 
+%%    seit Projektbeginn sehr erfolgreich in diesem Projekt. 
+%%    Die im Bericht gezeigten Ergebnisse gehen i.w.\ auf seine
+%%    Arbeiten zur"uck. Er ist fachlich bestens in das Themengebiet 
+%%    eingearbeitet und wird seine Dissertation auf diesen Themengebiet
+%%    anfertigen. Ferner wird er gegebenenfalls einen Nachfolger in das
+%%    Themengebiet einarbeiten.
+%%
+%%  \item[\qquad\textbf{b)}] Cand.-M.Sc.\ N.\ N.\ stud.\ Hilfskraft 
+%%\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% \newpage
+
+
+\subsection{Researchers in Germany with whom you have agreed to cooperate on 
+this 
+project}
+
+%The cooperation with the Lehrstuhl f"ur Statik (Technische
+%Universit\"at M"unchen, see below) will continue since we are using
+%their structural solver and coupling code, but they are not an
+%official project partner within this project.
+% 
+
+\qquad \quad None \\*[-3ex]
+
+
+\subsection{Researchers abroad with whom you have agreed to cooperate on this 
+	project}
+\label{sec:collab}
+
+\qquad \quad None \\*[-3ex]
+%The cooperation with the Lehrstuhl f"ur Statik (Technische
+%Universit\"at M"unchen, see below) will continue since we are using
+%their structural solver and coupling code, but they are not an
+%official project partner within this project.
+% 
+%{\color{blue}
+%\begin{itemize}
+%	\item Prof.\ Dr.\ J.\ Capecelatro, Department of Mechanical
+%          Engineering and Department of Aerospace Engineering,
+%          University of Michigan, USA. \\ %*[-2.5ex]
+%	
+%	
+%	Prof.\ Jesse Capecelatro, an Associate Professor at the
+%        University of Michigan, specializes in developing
+%        physics-based and data-driven turbulence models for complex
+%        multiphase and multi-physics flows. He possesses demonstrated
+%        expertise in areas closely related to this project, including
+%        particle-laden flows \cite{disscapecelatro2014},
+%        deagglomeration \cite{yao2021deagglomeration}, and symbolic
+%        regression analysis for multiphase flow problems
+%        \cite{beetham2021sparse,beetham2023multiphase}. This
+%        experience will be invaluable to the present project.
+%	
+%	Additionally, Prof.\ Capecelatro holds leadership roles at the
+%        Michigan Institute for Computational Discovery \& Engineering
+%        (MICDE), which is the hub for all research, education, and
+%        outreach in computational science and engineering at the
+%        University of Michigan. Machine learning and AI are central
+%        themes of MICDE (see https://micde.umich.edu/generative-ai/),
+%        and this connection will be leveraged to collaborate with
+%        other experts in ML and AI at the University of Michigan.
+%\end{itemize}	
+%}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\subsection{Researchers with whom you have collaborated scientifically 
+	within the past three years}
+
+
+%%Des Weiteren sind zu nennen (ohne Anspruch auf Vollst"andigkeit):
+\quad \quad Collaborations by Prof.~Dr.-Ing.~habil.~M.~Breuer: 
+\vspace{0.2cm}
+\begin{itemize}
+	\item Prof.\ Dr.\ K.U.  Bletzinger, Lehrstuhl f\"ur Statik,
+	Technische Universit\"at M\"unchen \\*[-2.5ex]
+	
+	\item  Dr.\ Ann-Kathrin Goldbach, Lehrstuhl f\"ur Statik,
+	Technische Universit\"at M\"unchen \\*[-2.5ex]
+	
+	\item  Dr.\ Andreas Apostolatos, MathWorks\\*[-2.5ex]
+	
+	\item Prof.\ Dr.\ D. S. Henningson and Prof. Dr. A. Hanifi, 
+KTH Royal Institute of Technology,\\*[-.1ex] Dept. of Eng. Mechanics, 
+Stockholm,  Sweden 
+\\*[-2.5ex]
+	
+	\item Prof.\ Dr.\ P. Schaffarczyk, Kiel University of Applied Sciences, 
+	Kiel\\*[-2.5ex]
+	
+	%\item Prof.\ Dr.\ Shuvam Sen, Department of Mathematical Sciences, 
+	%Tezpur University, India\\*[-3.25ex]
+	\item Prof.\ Dr.\ P. Neumann, High-Performance Computing, 
+	Helmut-Schmidt Universit\"at Hamburg\\*[-2.5ex]
+	\item Prof.\ Dr.\ O. Niggemann, Informatik in Maschinenbau,
+	Helmut-Schmidt Universit\"at Hamburg\\*[-2.5ex]
+	
+		
+	\item Prof.\ Dr.\ W. E. Weber, Statik und Dynamik,
+	Helmut-Schmidt Universit\"at Hamburg\\*[-2.5ex]
+	\item Prof.\ Dr.\ J. K\"upper, Center for Free-Electron Laser Science, 
+	DESY, Hamburg\\*[-2.5ex]
+		\item Prof.\ Dr.\ G. Biswas, Department of Mech. Eng., Indian Institute 
+		of Technology Kanpur, India\\*[-2.5ex]
+		
+    	\item  Dr.\ B. \"Unsal, T\"UBITAK UME (National Metrology Institute of 
+    	Turkey), Kocaeli, Turkey\\*[-2.5ex]		
+	
+	%\item Prof.\ Dr.-Ing.\ habil.\ Jochen TUBITAK UME (National Metrology 
+	%Institute Turkey)Fr"ohlich, 
+	%      Professur f"ur Str"omungsmechanik, 
+	%      Technische Universit"at Dresden. \\*[-3.25ex]
+	%
+	%\item Apl.\ Prof.\ Dr.-Ing.\ Suad Jakirli\'c, 
+	%      Technische Universit"at Darmstadt, 
+	%      FG Str"omungsmechanik und Aerodyn. \\*[-3.25ex]
+	%
+	%\item Dr.\ M.\ Visonneau and Dr.\ G.B.\ Deng, Laboratoire de
+	%  M\'ecanique des Fluides CNRS UMR 6598, Equipe Mod\'elisation
+	%    Num\'erique, Ecole Centrale de Nantes, France.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% \small 
+
+\subsection{Project-relevant cooperation with commercial enterprises}
+
+\qquad \quad None \\*[-3ex]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Project-relevant participation in commercial enterprises}
+
+\qquad \quad None \\*[-3ex]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\pagebreak
+\subsection{Scientific equipment}
+
+For the development of the methods and tools as well as for the pre-
+and post-processing two different in-house Linux clusters with 960/512
+cores are available at the department. Furthermore, the university has
+recently installed the HPC-system
+HSUper\footnote[2]{\url{https://www.hsu-hh.de/hpc/en/hsuper}} which
+can be used. It consists of 571 compute nodes each equipped with
+256~GB RAM and 2 Intel Icelake sockets.  Each socket features a
+Intel(R) Xeon (R) Platinum 8360Y processor with 36 cores, yielding a
+total of 72 cores per node. All nodes are connected by a non-blocking
+InfiniBand HDR100 fabric network. HSUper has entered the TOP500 list
+of the fastest supercomputers in the world in June 2022, ranked 339
+with a Linpack performance of 2.13 PFLOPS \citep{top500}. It is
+further ranked 70 in the Green500 list, which measures the
+computational performance per consumed Watt \citep{dtec2022b}. In case
+these resources are still not sufficient, an application will be sent
+to one of the new National High Performance Computing Centers (NHR).
+
+HSU Hamburg is presently also extending their hardware equipment
+regarding CPUs and GPUs. The latter will be advantageous for the
+machine-learning algorithms to be applied in this project.
+
+\subsection{Other submissions}
+\qquad \quad None \\*[-3ex]
+\subsection{Other information}
+\qquad \quad None \\*[-3ex]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%-----------------------------------------------------------------------------
+\pagebreak
+\section{Requested modules / funds}
+
+\subsection{Basic module}
+
+\subsubsection{Funding for staff}
+\begin{itemize}
+	\item 1 Doctoral researcher (TV-L E 13, full time for 36 
+	months)\vspace{0.2cm} 
+	
+	\item 1 Student assistant 10 h/week for 36 months
+	
+%	\vspace{0.2cm}
+	  - \underline{Description:}
+          The participation of a student assistant is strongly
+	required since the simulation tasks and the data analysis tasks within
+	this project are quite extensive. Here the researcher
+	should be supported by a student assistant. He/she can also assist the
+	testing and validation phase of the methods and algorithms developed
+	within the project.
+
+        - \underline{Explanation:} The doctoral researcher will be
+        supervised in close collaboration between Dr.\ Khalifa and
+        Prof.\ Breuer.  However, Dr. Khalifa will assume sole
+        personnel responsibility for the student employee who supports
+        the academic employee. Since he has already worked on the topic
+        as a part of his postdoctoral studies and is thus deeply rooted in
+        the subject matter, he will assume full supervision of the
+        student assistant.\\*[-4ex]
+\end{itemize}
+
+
+%% Kosten f"ur 1 Jahr: 
+%% \hfill 2 * 2 * 19\,200 DM =  76\,800 DM
+
+%--------------------------------------------------------------------------------
+
+\subsubsection{Direct project costs}
+
+\paragraph{5.1.2.1 Equipment up to \EUR{10,000}, software and 
+consumables}~\\*[-1ex]
+
+\qquad \quad None\\*[-2ex]
+
+\paragraph{5.1.2.2 Travel expenses}~\\*[-1ex]
+\label{sec:travcost}
+
+Funding for travel is necessary to present the results of the project
+at several national (e.g., \emph{GAMM}) and international conferences
+(e.g., \emph{Int. Conference on Multiphase Flow, DLES}), at least once
+per year.
+
+  \qquad \quad 3\,000 $\EUR$ / year \\
+
+%{\color{blue} Furthermore, in the context of the planned collaboration
+%  with Professor Jesse Capecelatro from the University of Michigan
+%  (see Section~\ref{sec:collab}), we have planned \textbf{two research
+%    visits} of the principal investigator, Dr.-Ing. Ali Khalifa, each
+%  lasting one month. These visits are designed to facilitate close
+%  cooperation on key issues addressed in the project. Such in-person
+%  visits are essential for effective communication and collaboration.
+%  Furthermore, the one-month duration is justified as simulations
+%  typically take several days to complete, making a shorter stay
+%  insufficient.
+%
+%The first visit, scheduled shortly after the project's initiation,
+%will focus on generating the deagglomeration database
+%(Objective~\textbf{A}). During this visit, discussions and exchanges
+%on ideas will ensure that the generated data is suitable and useful
+%for the wider research community working on similar topics.
+%Additionally, we will conduct initial discussions and tests on the
+%analysis of the available data (Objective~\textbf{B}).
+%
+%The second visit is planned for the second half of the project's
+%duration and will concentrate on developing the symbolic-regression
+%based deagglomeration model (Objective~\textbf{C}). This visit will
+%emphasize exploring various approaches and ideas to tackle the
+%problem, with initial tests being a key component of the discussions.
+%
+%Prof. Capecelatro has already agreed to this plan. \\[2ex]
+%
+% \qquad \quad Flight tickets \quad  2\,000 $\EUR$ / visit 
+% 
+% \qquad \quad Housing \qquad ~~ 1\,750 $\EUR$ / visit  \\[2ex]
+%
+%
+%Sum of travel expenses: \quad 7\,500 $\EUR$ \: + \: 2 $\times$ (3\,750 
+%$\EUR$) 
+%= 
+%\textbf{15\,000 $\EUR$ }
+%
+%}
+\paragraph{5.1.2.3 Visiting researchers (excluding Mercator 
+Fellows)}~\\*[-1ex]
+
+\qquad \quad None\\*[-2ex]
+
+\paragraph{5.1.2.4 Expenses for laboratory animals}~\\*[-1ex]
+
+\qquad \quad None\\*[-2ex]
+
+\paragraph{5.1.2.5 Other costs}~\\*[-1ex]
+
+\qquad \quad None\\*[-2ex]
+
+%\newpage
+\paragraph{5.1.2.6 Project-related publication expenses}~\\*[-1ex]
+
+In order to publish the outcome of the project in international journals,
+additional funding is required: 
+
+  \qquad \quad 750 $\EUR$ / year
+
+The authors started to publish with open access and observed a
+very positive impact on the knowledge dispersion in the short term 
+compared to subscription-only work. 
+
+\subsubsection{Instrumentation}
+%
+\paragraph{5.1.3.1 Equipment exceeding \EUR{10,000} }~\\*[-1ex]
+
+\qquad \quad None\\*[-3ex]
+
+
+\paragraph{5.1.3.1 Major instrumentation exceeding \EUR{50,000} }~\\*[-1ex]
+
+\qquad \quad None\\*[-3ex]
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\section{Project Requirements}
+
+
+%%\small 
+%
+%\section{Declarations}
+%
+%%%\subsection{Antrag an anderer Stelle}
+%
+%\begin{itemize}
+%\item A request for funding this project has not been submitted to any
+%  other addressee. In case I submit such a request I will inform the
+%  Deutsche Forschungsgemeinschaft immediately.
+%
+%%% \subsection{Regeln guter wissenschaftlicher Praxis}
+%
+%\item I hereby undertake to follow the rules of the DFG for good 
+%      scientific practice.
+%
+%%% \subsection{Publikations- und Literaturverzeichnisse}
+%
+%\item I read and follow the guidelines of the DFG for the publication
+%  lists.
+%
+%
+%%% \subsection{Sonstiges}
+%
+% \item I will inform the ‘Vertrauensdozent’ of our university 
+%       about this application.
+%\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Module Temporary Position for Principal Investigator}
+%
+
+\qquad \quad None\\*[-3ex]
+
+\subsection{Module Replacement Funding}
+
+\qquad \quad None\\*[-3ex]
+
+
+\subsection{Module Temporary Clinician Substitute}
+
+\qquad \quad None\\*[-3ex]
+
+\subsection{Module Mercator Fellows}
+
+\qquad \quad None\\*[-3ex]
+
+\subsection{Module Workshop Funding}
+
+\qquad \quad None\\*[-3ex]
+
+\subsection{Module Public Relations Funding}
+
+\qquad \quad None\\*[-3ex]
+
+\subsection{Module Standard Allowance for Equity and Diversity}
+
+\qquad \quad None\\*[-3ex]
+
+
+\end{document} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

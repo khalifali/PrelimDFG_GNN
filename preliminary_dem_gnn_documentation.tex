@@ -1,0 +1,211 @@
+\section{Preliminary DEM and graph-based analysis}
+\label{sec:preliminary_dem_gnn}
+
+\subsection{Agglomerate generation and numerical design}
+
+The preliminary data set consists of 135 monodisperse agglomerates generated
+with the local-filling-factor algorithm of Ringl and Urbassek. In this method,
+a new primary particle is attached preferentially to a particle with a low
+local filling factor. The detector radius is written as
+\begin{equation}
+    r_{\sigma}=m_{\sigma}r_p,
+\end{equation}
+where $r_p$ is the primary-particle radius and $m_{\sigma}$ is the detector-radius
+multiplier. The latter controls the generated morphology but is not itself the
+fractal dimension. Consequently, the requested values of $D_f$ should be
+regarded as design labels until the resulting structures are independently
+evaluated, for example by box counting or a radius-of-gyration method.
+
+The numerical design was
+\begin{equation}
+\begin{aligned}
+  &3\ \text{particle diameters}\times3\ \text{particle counts}\\
+  &\quad\times3\ \text{requested fractal dimensions}
+  \times5\ \text{random realizations}=135\ \text{cases}.
+\end{aligned}
+\end{equation}
+
+\begin{center}
+\begin{tabular}{|p{0.39\linewidth}|p{0.51\linewidth}|}
+\hline
+Design variable & Values \\
+\hline
+Primary-particle diameter $d_p$ & $1.0$, $1.5$, $2.0$ (simulation length units) \\
+Number of particles $N$ & $50$, $100$, $200$ \\
+Requested fractal dimension $D_f$ & $1.8$, $2.2$, $2.6$ \\
+Random realizations & $5$ per parameter combination \\
+Total number of cases & $135$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Each realization was assigned a unique random seed. The generated particle
+coordinates and radii were exported as CSV, LIGGGHTS data (\texttt{.sys}), and
+VTK files. The LIGGGHTS data contain one granular atom type, no bonds, zero
+initial translational and angular velocities, and an initial computational box
+from $-100$ to $100$ in each coordinate direction.
+
+\subsection{DEM relaxation and material parameters}
+
+The generated structures were relaxed with LIGGGHTS using adhesive particle
+contacts. Particle and contact data were stored at multiple time steps up to
+step $100000$. The particle output contains positions, radii, particle IDs and
+velocities, while the contact output contains the interacting particle IDs,
+gap, overlap, contact area, contact state, normal and tangential forces, total
+force and contact torque. These data were converted to VTK for inspection in
+ParaView and subsequent graph construction.
+
+The parameters confirmed directly from the generated particle data are listed
+below. The remaining values must be copied from the final LIGGGHTS input before
+this text is used in a report or publication.
+
+\begin{center}
+\begin{tabular}{|p{0.45\linewidth}|p{0.45\linewidth}|}
+\hline
+Property & Value used \\
+\hline
+Particle shape & Sphere \\
+Particle diameter $d_p$ & $1.0$, $1.5$, $2.0$ (simulation length units) \\
+Particle density $\rho_p$ & $2.0$ (in the selected LIGGGHTS unit system) \\
+Initial translational/angular velocity & Zero \\
+Bond types & None \\
+Contact model & \texttt{[insert model from LIGGGHTS input]} \\
+Young's modulus $E$ & \texttt{[insert verified value and unit]} \\
+Poisson ratio $\nu$ & \texttt{[insert verified value]} \\
+Coefficient of restitution $e$ & \texttt{[insert verified value]} \\
+Sliding-friction coefficient $\mu$ & \texttt{[insert verified value]} \\
+Rolling-friction coefficient $\mu_r$ & \texttt{[insert verified value]} \\
+Hamaker constant $A_H$ & \texttt{[insert verified value in J]} \\
+Minimum separation $h_{\min}$ & \texttt{[insert verified value and unit]} \\
+Time step $\Delta t$ & \texttt{[insert verified value and unit]} \\
+\hline
+\end{tabular}
+\end{center}
+
+For each case, particle and contact VTK files were matched by time-step number.
+A snapshot was classified as relaxed after three consecutive output intervals
+satisfied both
+\begin{equation}
+ \frac{\Delta x_{\mathrm{RMS}}}{d_p}\leq 10^{-4},
+ \qquad
+ 1-\frac{|C_k\cap C_{k+1}|}{|C_k\cup C_{k+1}|}\leq 0.01,
+\end{equation}
+where $C_k$ denotes the set of particle contacts at time step $k$. If no
+snapshot fulfilled these criteria, the last common particle/contact time step
+was retained and marked as non-converged.
+
+\subsection{Graph construction and supervised targets}
+
+Each relaxed agglomerate was represented as a graph. Primary particles form
+the nodes and physical particle contacts form the edges. Every physical contact
+was stored in both directions for message passing. Thus, an agglomerate with
+$N$ particles and $N_c$ contacts has $N$ nodes and $2N_c$ directed edges.
+
+The preprocessing stored three node features, but the minimal GNN used only
+two structural node scalars:
+\begin{equation}
+ \boldsymbol{x}_i=
+ \left[
+   \frac{|\boldsymbol{x}_i-\boldsymbol{x}_c|}{R_g},\;
+   z_i
+ \right],
+\end{equation}
+where $d_{\mathrm{ref}}$ is twice the median particle radius,
+$\boldsymbol{x}_c$ is the agglomerate center, $R_g$ is the radius of gyration,
+and $z_i$ is the coordination number. Normalized, centered particle coordinates
+were supplied separately to the encoder. The stored radius ratio was omitted
+because it is approximately constant for the present monodisperse particles.
+
+The converted DEM data provide 22 available edge/contact features, including
+distance, overlap, gap, contact area, force and torque quantities and contact
+flags. For the minimal model, only the normalized centre distance
+$d_{ij}/d_{\mathrm{ref}}$ was selected as a stored edge scalar, because
+connectivity and interparticle geometry are the quantities directly relevant
+to the three purely structural targets considered here. Graph connectivity
+and the normalized relative-position vector were additionally supplied for
+message passing. Force, torque, overlap and contact-area fields were retained
+in the processed data for sensitivity studies, but were not used by the
+reported minimal model.
+
+The convex hull of the particle centers was calculated with a small numerical
+perturbation (Qhull option \texttt{QJ}). Hull vertices were classified as
+surface particles. A breadth-first search through the contact graph then
+defined the graph depth $h_i$ of every particle from this surface. Three
+graph-level proxy targets were calculated:
+\begin{align}
+ \overline{h} &= \frac{1}{N}\sum_{i=1}^{N}h_i,\\
+ f_{h\geq2} &= \frac{1}{N}\sum_{i=1}^{N}\mathbf{1}(h_i\geq2),\\
+ S_{\mathrm{access}} &= \frac{1}{N}\sum_{i=1}^{N}\exp(-\beta h_i),
+ \qquad \beta=0.5.
+\end{align}
+These quantities represent geometric shielding and accessibility proxies. They
+are not yet oxygen-transport or oxygen-uptake results.
+
+\subsection{GNN architecture and preliminary training}
+
+The model embeds the two selected node scalars together with normalized
+particle coordinates, and the selected edge-distance scalar together with
+relative-position vectors, into a hidden space of dimension 64. Six residual
+GINE message-passing layers with layer normalization and dropout are applied.
+Global mean, maximum and size-normalized additive pooling produce one
+aggregate-level representation, which is compressed to a latent vector
+\begin{equation}
+ \boldsymbol{\lambda}_A=[\lambda_1].
+\end{equation}
+Latent dimensions from one to four were tested. The selected dimension was the
+smallest candidate whose mean out-of-fold $R^2$ was within 0.02 of the best
+candidate. This rule selected one latent coordinate. A final two-layer
+prediction head maps $\lambda_1$ to $\overline{h}$, $f_{h\geq2}$ and
+$S_{\mathrm{access}}$; no precomputed aggregate-level descriptor is supplied
+to the prediction head.
+
+Training used Adam with a learning rate of $10^{-3}$, weight decay of $10^{-5}$,
+at most 300 epochs, batch size 16, dropout 0.1 and random seed 7. Validation-based
+early stopping and random rigid-rotation augmentation were used. Targets were
+standardized using only the corresponding training data. All 135 graphs were
+processed successfully. Five-fold cross-validation was grouped by parameter
+combination, so that all random realizations of one $(d_p,N,D_f)$ combination
+remained in the same held-out fold. The selected one-dimensional model gave:
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Fold & RMSE($\overline{h}$) & RMSE($f_{h\geq2}$) & RMSE($S_{\mathrm{access}}$) \\
+\hline
+1 & 0.315 & 0.051 & 0.044 \\
+2 & 0.345 & 0.053 & 0.036 \\
+3 & 0.452 & 0.054 & 0.041 \\
+4 & 0.448 & 0.047 & 0.031 \\
+5 & 0.393 & 0.040 & 0.033 \\
+\hline
+Mean & 0.390 & 0.049 & 0.037 \\
+\hline
+\end{tabular}
+\end{center}
+
+The combined out-of-fold $R^2$ values were 0.869 for mean graph depth, 0.894
+for shielded fraction and 0.913 for accessibility score, with corresponding
+MAE values of 0.293, 0.039 and 0.030. The mean $R^2$ across the three targets
+was 0.892. Latent dimensions two, three and four gave mean $R^2$ values of
+0.887, 0.888 and 0.876, respectively; hence additional latent coordinates did
+not improve the result.
+
+Particle-count-only baselines achieved mean out-of-fold $R^2$ values between
+0.754 and 0.776, showing that the graph model captures structural variation
+beyond particle count alone. A stricter baseline used particle count, radius
+of gyration, contact count, contact density, mean coordination and maximum
+coordination. Linear regression with these conventional descriptors achieved
+a mean $R^2$ of 0.891, while a random forest achieved 0.909, slightly exceeding
+the GNN by 0.016. Thus, the present proxy-target study demonstrates morphology
+information beyond particle count, but it does not yet establish that detailed
+graph encoding is necessary beyond well-chosen scalar descriptors. The more
+decisive test will use resolved oxygen-transport targets for aggregates with
+similar conventional descriptors but different internal topology.
+
+The present results demonstrate the complete DEM-to-graph-to-GNN workflow, but
+remain preliminary. The cross-validation latent values originate from
+independently trained fold models and are therefore not interpreted as one
+common latent coordinate. For descriptive latent analysis, final models are
+trained on all graphs and their arbitrary sign and scale are aligned across
+random seeds. Such all-data latent values are used only for interpretation,
+not as leakage-free evidence of predictive performance.

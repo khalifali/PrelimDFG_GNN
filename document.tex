@@ -1,0 +1,1189 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric}
+
+\geometry{margin=2.35cm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlist[itemize]{topsep=0.25em,itemsep=0.15em,leftmargin=1.6em}
+\setlist[enumerate]{topsep=0.25em,itemsep=0.15em,leftmargin=1.8em}
+
+\definecolor{tumblue}{RGB}{0,82,147}
+\definecolor{lightblue}{RGB}{225,238,247}
+\definecolor{lightgreen}{RGB}{229,242,232}
+\definecolor{lightorange}{RGB}{250,236,217}
+\definecolor{lightgray}{RGB}{242,242,242}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=tumblue,
+  urlcolor=tumblue,
+  citecolor=tumblue
+}
+
+\tikzset{
+  block/.style={
+    rectangle, rounded corners=2pt, draw=tumblue, thick,
+    fill=lightblue, align=center, text width=3.2cm,
+    minimum height=1.25cm, inner sep=5pt
+  },
+  outputblock/.style={
+    rectangle, rounded corners=2pt, draw=black!65, thick,
+    fill=lightgreen, align=center, text width=3.2cm,
+    minimum height=1.25cm, inner sep=5pt
+  },
+  decisionblock/.style={
+    diamond, aspect=2.2, draw=black!65, thick,
+    fill=lightorange, align=center, text width=2.6cm,
+    inner sep=2pt
+  },
+  flowarrow/.style={-{Stealth[length=2.5mm]}, thick, draw=black!70},
+  optionalarrow/.style={-{Stealth[length=2.5mm]}, thick, dashed, draw=black!60},
+  note/.style={
+    rectangle, rounded corners=2pt, draw=black!45,
+    fill=lightgray, align=left, text width=4.0cm,
+    inner sep=5pt
+  }
+}
+
+\newcommand{\Pe}{\mathrm{Pe}}
+\newcommand{\Da}{\mathrm{Da}}
+\newcommand{\Rey}{\mathrm{Re}}
+\newcommand{\Sh}{\mathrm{Sh}}
+\newcommand{\Otwo}{\mathrm{O}_2}
+\newcommand{\diff}{\mathop{}\!\mathrm{d}}
+
+\title{\textbf{Topology-Controlled Reactive Mass Transfer in Biological Aggregates}\\[0.7em]
+  \large Particle-Resolved Simulation, Graph-Based Model Reduction and
+  Dynamic Closures for Reactor-Scale CFD--PBM Models}
+\author{Revised Concept Summary}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The project will determine how the internal topology of biological aggregates
+controls steady and transient oxygen supply and will translate this information
+into closures for reactor-scale simulations. Particle-resolved DNS--DEM
+simulations will resolve flow and oxygen transport around the individual cells
+of one aggregate at a time. A graph neural network (GNN) will be used
+\emph{offline} as a structure-aware teacher model: it will test which
+topological information is required beyond size and porosity and will encode
+that information in a low-dimensional morphology representation. The GNN will
+not be evaluated for every aggregate in the final reactor simulation. Instead,
+its predictions will be compressed into a lookup table, symbolic correlation
+or small neural network for three quantities: equilibrium oxygen uptake, the
+dynamic response time and the fraction of poorly supplied cells. These
+deployable closures will be evaluated locally for the aggregate population in
+a CFD--population balance model (CFD--PBM) or for parcels in an
+Euler--Lagrange model. The project thereby connects cell-resolved transport
+physics to reactor-scale oxygen consumption and exposure heterogeneity without
+resolving individual cells in the reactor.
+\end{abstract}
+
+\section{Goal, Scope and Scientific Advance}
+
+The central question is:
+
+\begin{quote}
+\itshape
+How does aggregate topology control oxygen uptake, oxygen-response dynamics
+and the fraction of oxygen-limited cells, and how can these effects be
+represented economically in reactor-scale models?
+\end{quote}
+
+Current coarse models usually treat a biological aggregate as an equivalent
+homogeneous sphere. Its uptake is then calculated from size, bulk oxygen
+concentration and an empirical mass-transfer or effectiveness correlation.
+This can miss differences between aggregates that have the same size and
+porosity but different cell connectivity, shielding, surface accessibility and
+internal transport pathways.
+
+The project will deliver three morphology-aware closures:
+\begin{align}
+  \eta_A &=
+  F_{\eta}(D_A,\lambda_A,\Pe_A,\Da_A), \label{eq:eta_closure}\\
+  \tau_A &=
+  F_{\tau}(D_A,\lambda_A,\Pe_A,\Da_A), \label{eq:tau_closure}\\
+  f_{\mathrm{poor},A} &=
+  F_f(D_A,\lambda_A,\Pe_A,\Da_A,\chi_A), \label{eq:f_closure}
+\end{align}
+where \(D_A\) is aggregate size, \(\lambda_A\) is a reduced morphology
+descriptor or class, \(\Pe_A\) and \(\Da_A\) describe transport and reaction,
+and \(\chi_A\) is the reduced internal oxygen state. The effectiveness
+\(\eta_A\) determines equilibrium uptake, \(\tau_A\) determines the memory of
+the internal oxygen state, and \(f_{\mathrm{poor},A}\) quantifies cellular
+exposure heterogeneity.
+
+The resolved simulations concern isolated aggregates under controlled local
+conditions. They do not directly predict the spatial distribution of
+oxygen-limited cells in a reactor. Their role is to supply local constitutive
+relations. At reactor scale, the CFD solution provides the oxygen concentration
+and hydrodynamic conditions at the position of every population class or
+parcel. In this document, \(C_{\mathrm{bulk}}\) denotes this \emph{local
+unresolved carrier-phase concentration seen by the aggregate}; it is not the
+spatially averaged oxygen concentration of the entire reactor. The PBM or
+Euler--Lagrange model provides the local aggregate population. Evaluating the
+closures for all local classes or parcels then yields the reactor-wide
+distribution of uptake and oxygen-limited cell fractions.
+
+\section{State of the Art and Identified Gap}
+
+\subsection{Continuum diffusion--reaction models}
+
+Established biofilm and granule models describe dissolved substrates through
+continuum diffusion--reaction balances coupled to microbial kinetics. The
+classical multispecies biofilm framework of Wanner and Gujer accounts for
+substrate gradients, external mass-transfer resistance and biomass
+development~\cite{WannerGujer1986}. For suspended granules or pellets, the
+aggregate is commonly idealised as a homogeneous sphere with radial symmetry,
+an effective diffusivity and Monod-type reaction kinetics. The resulting
+one-dimensional problem predicts oxygen penetration depth, active-layer
+thickness or an effectiveness factor as functions of aggregate radius,
+effective diffusivity and kinetic parameters~\cite{Stewart2003,Wu2008}.
+
+These models are computationally efficient and remain the appropriate
+baseline. Diffusion is often the dominant internal transport mechanism, and a
+recent experimental and modelling study found that heterogeneous diffusivity
+had only a minor effect on the total flux for the investigated aerobic
+granules~\cite{VandenBerg2020}. Consequently, the proposed project does not
+presuppose that a graph model is always necessary. It tests when the
+homogeneous-sphere approximation is sufficient and when it fails.
+
+\subsection{Evidence that structure can affect oxygen transport}
+
+Bioaggregates are not necessarily homogeneous continua. Microelectrode and
+imaging studies have shown dense cell clusters, voids, channels and spatially
+heterogeneous activity. De Beer et al.\ demonstrated that three-dimensional
+biofilm structure altered oxygen gradients and effective exchange
+area~\cite{DeBeer1994}. Transient measurements in aerobic granules further
+showed heterogeneous cell and extracellular-polymer distributions and
+structure-dependent oxygen response~\cite{Chiu2007}. Reconstructed-geometry
+CFD studies subsequently connected granule structure with local
+hydrodynamics, penetration and reaction, obtaining information that is lost
+when the granule is treated as homogeneous~\cite{Liu2010}. A percolation model
+has likewise indicated that connected internal pores can enhance intragranular
+transport~\cite{Liu2011Percolation}.
+
+At the other end of the modelling spectrum, individual- and particle-based
+biofilm models resolve cells or biomass particles and couple them to
+diffusion--reaction fields~\cite{Kreft2001,Picioreanu2004}. Such models can
+represent structural heterogeneity, but they are too expensive to evaluate for
+the complete aggregate population of a reactor-scale CFD calculation.
+
+\subsection{Data-driven structure--property reduction}
+
+Machine learning has been used to infer effective flow and transport
+properties of porous structures from geometrical descriptors or resolved
+images. For example, CFD-generated data have been mapped to permeability and
+filtration properties using fully connected and convolutional neural
+networks~\cite{Marcato2022}. Graph networks are particularly suitable when the
+system is naturally represented by interacting particles or connected pores,
+because message passing preserves neighbourhood and connectivity
+information~\cite{SanchezGonzalez2020}.
+
+The unresolved gap is therefore not the calculation of oxygen diffusion in an
+idealised sphere, nor the cell-resolved simulation of one structure. It is the
+derivation of a \emph{transferable and inexpensive closure} that retains only
+the topological information demonstrably needed for reactor-scale prediction.
+The novelty of the proposed project lies in combining particle-resolved
+flow--oxygen simulations, graph-based structural discovery and explicit
+distillation into CFD--PBM-compatible closures.
+
+\section{Hypotheses and Work-Package Logic}
+
+The scientific hypotheses are aligned directly with the work packages:
+
+\begin{description}[style=nextline]
+  \item[H1: Steady structure--transport relationship.]
+  Aggregates with equal size and porosity can have different equilibrium
+  uptake and poorly supplied cell fractions because topology changes shielding,
+  accessibility and transport-path connectivity. WP2 tests H1.
+
+  \item[H2: Morphology-dependent oxygen memory.]
+  The response to changing external oxygen and flow conditions is not always
+  instantaneous; its characteristic time depends on morphology and the
+  competition among convection, diffusion and consumption. WP3 tests H2.
+
+  \item[H3: Reducible topological information.]
+  The structural information needed for H1 and H2 can be compressed into a
+  small number of interpretable descriptors or morphology classes and used in
+  inexpensive coarse-scale closures. WP4 tests H3.
+\end{description}
+
+WP1 is the enabling package that establishes the validated numerical framework
+and morphology library. Figure~\ref{fig:wpflow} shows the project logic.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=8mm and 12mm]
+  \node[block] (wp1) {\textbf{WP1}\\Resolved framework, validation and morphology library};
+  \node[block, below=of wp1] (wp2) {\textbf{WP2 / H1}\\Steady topology-dependent transport};
+  \node[block, below=of wp2] (wp3) {\textbf{WP3 / H2}\\Transient oxygen response and memory};
+  \node[block, below=of wp3] (wp4) {\textbf{WP4 / H3}\\Graph-based reduction and coarse-model integration};
+
+  \node[outputblock, right=18mm of wp2] (out1)
+    {\(\eta_A\), \(Q_{A,\mathrm{eq}}\), \(f_{\mathrm{poor},\mathrm{eq}}\)};
+  \node[outputblock, right=18mm of wp3] (out2)
+    {\(\tau_A\), or a higher-order dynamic model if required};
+  \node[outputblock, right=18mm of wp4] (out3)
+    {Lookup table, symbolic law or small ANN in CFD--PBM / Euler--Lagrange};
+
+  \draw[flowarrow] (wp1) -- (wp2);
+  \draw[flowarrow] (wp2) -- (wp3);
+  \draw[flowarrow] (wp3) -- (wp4);
+  \draw[flowarrow] (wp2) -- (out1);
+  \draw[flowarrow] (wp3) -- (out2);
+  \draw[flowarrow] (wp4) -- (out3);
+\end{tikzpicture}
+\caption{Work-package flow and direct correspondence between hypotheses and
+deliverables. WP2 and WP3 generate the physical closures; WP4 reduces and
+implements them.}
+\label{fig:wpflow}
+\end{figure}
+
+\section{Unified Physical and Numerical Framework}
+
+To avoid an unnecessarily large parameter space, the baseline system is
+defined once in Table~\ref{tab:framework}. Approximately \(N_A=200\) spherical
+primary particles provide a useful starting point, but preliminary scaling and
+grid-cost tests will determine whether a range such as
+\(N_A\in\{50,200,500\}\) is needed. The key design requirement is not a
+particular particle number; it is a morphology library containing structures
+with similar \(D_A\) and porosity but different topology.
+
+\begin{table}[htbp]
+\centering
+\caption{Compact definition of the baseline simulation framework.}
+\label{tab:framework}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.22\textwidth}
+                >{\raggedright\arraybackslash}p{0.70\textwidth}}
+\toprule
+\textbf{Element} & \textbf{Baseline and controlled variations}\\
+\midrule
+Primary cells &
+Spherical, impermeable and approximately neutrally buoyant; no-slip momentum
+boundary and reactive oxygen boundary. Moderate size polydispersity can be
+added after the monodisperse reference case.\\
+
+Aggregate state &
+Equivalent size \(D_A\), particle number \(N_A\), porosity, anisotropy,
+coordination/connectivity and surface accessibility. These quantities are
+stored as conventional descriptors and as a particle graph.\\
+
+Mechanics &
+JKR or van der Waals adhesion is used to generate and stabilise plausible
+structures. The contact network is fixed during the transport simulations;
+the full aggregate may translate and rotate. Restructured or fragmented
+snapshots may be imported as prescribed morphologies, but their mechanics is
+not predicted here.\\
+
+Flow &
+Single sphere and regular clusters for validation; uniform flow and simple
+shear for controlled analysis; homogeneous isotropic turbulence (HIT) for the
+main database; selected reactor-derived histories for transfer testing.\\
+
+Transport and reaction &
+Conservative advection--diffusion with molecular diffusivity \(D_{\Otwo}\).
+First-order surface uptake is the reference model; Monod uptake is introduced
+after transport validation.\\
+
+Control variables &
+\(\Pe_A\), \(\Da_A\), \(D_A/\eta_K\), aggregate orientation and selected
+turbulence parameters. A designed parameter study replaces a full Cartesian
+product.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Role of adhesion and distinction from the breakup project}
+
+Adhesion is necessary to create a physically meaningful contact network, but
+it is not a closure output in this project. The reference simulations use
+fixed structures so that the effect of topology on oxygen transport is
+identifiable. This choice separates the project from the running DFG project
+on fluid-induced breakup, which predicts breakup onset, mechanism and daughter
+sizes.
+
+Restructuring and fragmentation need not be ignored. They can enter through a
+\emph{one-way interface}: representative pre- and post-restructuring or
+fragment geometries are treated as members of the morphology library, and the
+new project quantifies their transport consequences. Thus the proposal can
+show that mechanics affects oxygen supply without duplicating the development
+of a breakup model. A later coarse reactor model may obtain morphological
+transitions from experiments, a PBM kernel or the existing breakup project.
+
+\subsection{Resolved flow and oxygen equations}
+
+The liquid is described by the incompressible Navier--Stokes equations. An
+immersed-boundary or fictitious-domain formulation resolves the no-slip
+surfaces of all primary cells. Dissolved oxygen satisfies
+\begin{equation}
+  \frac{\partial C}{\partial t}
+  +\boldsymbol{u}\cdot\nabla C
+  =D_{\Otwo}\nabla^2C+S_C.
+  \label{eq:oxygen}
+\end{equation}
+At the surface \(S_i\) of cell \(i\),
+\begin{equation}
+  -D_{\Otwo}\nabla C\cdot\boldsymbol{n}=j_i,
+  \qquad
+  j_i=k_s C_{s,i},
+  \label{eq:first_order}
+\end{equation}
+for the first-order baseline. A subsequent biological case uses
+\begin{equation}
+  j_i=j_{\max}\frac{C_{s,i}}{K_{\Otwo}+C_{s,i}}.
+  \label{eq:monod}
+\end{equation}
+The surface-averaged concentration and uptake of each cell are
+\begin{equation}
+  C_i(t)=\frac{1}{A_i}\int_{S_i}C\,\diff A,
+  \qquad
+  Q_i(t)=\int_{S_i}j_i\,\diff A,
+  \qquad
+  Q_A(t)=\sum_{i=1}^{N_A}Q_i(t).
+  \label{eq:cell_outputs}
+\end{equation}
+These cell-level labels make it possible to compute total uptake and the
+internal distribution of oxygen exposure from the same simulation.
+
+\subsection{Dimensionless design space}
+
+The P\'eclet number measures convection relative to molecular diffusion:
+\begin{equation}
+  \Pe_A=\frac{U_A D_A}{D_{\Otwo}},
+  \qquad
+  \Pe_{\dot{\gamma}}=\frac{\dot{\gamma}D_A^2}{D_{\Otwo}}
+  \quad\text{for shear-dominated conditions}.
+  \label{eq:pe}
+\end{equation}
+It determines the external boundary layer and the extent to which flow can
+refresh internal pore spaces. The Damk\"ohler number measures consumption
+relative to diffusive supply. For first-order uptake,
+\begin{equation}
+  \Da_A=\frac{k_s A_{\mathrm{tot}}}{D_{\Otwo}D_A}.
+  \label{eq:da}
+\end{equation}
+Large \(\Da_A\) favours strong internal depletion; large \(\Pe_A\) can improve
+external and pore-scale supply, depending on topology. Expressing the database
+in terms of \(\Pe_A\) and \(\Da_A\) reduces dependence on one specific reactor
+or organism and makes the resulting closures transferable.
+
+\subsection{Validation and turbulence simulations}
+
+Validation proceeds from diffusion/reaction and forced convection around one
+sphere to regular clusters and then to uniform flow and simple shear.
+Conservation of total reactive flux, grid convergence, symmetry and available
+\(\Sh\) limits are verified before HIT simulations.
+
+The main database contains one structurally fixed aggregate per
+particle-resolved HIT simulation. A scalar-forcing term maintains a prescribed
+domain-mean bulk concentration despite oxygen consumption. Statistically
+stationary cases determine equilibrium quantities. Step, pulse and periodic
+changes of bulk oxygen, supplemented by a small number of reactor-derived
+histories, determine dynamic response. Different simulations represent the
+range of local conditions encountered along reactor trajectories; the
+reactor-scale population model later combines these local responses.
+
+\section{Graph Representation and Offline Learning}
+
+For aggregate \(r\), the graph
+\(\mathcal{G}_r=(\mathcal{V}_r,\mathcal{E}_r)\) contains one node per primary
+cell. Compact static node features describe radius, relative position,
+coordination, local void fraction, distance from the aggregate surface and
+accessible surface area. Two edge definitions are compared: physical contacts
+and spatial neighbours within a cutoff. Edge features describe relative
+position, gap/contact state and a local shielding or pore-throat measure.
+Global operating conditions such as \(\Pe_A\), \(\Da_A\) and
+\(C_{\mathrm{bulk}}\) are supplied separately.
+
+The graph describes morphology; the resolved CFD fields generate targets.
+Dynamic variables such as \(C_i(t)\) and \(Q_i(t)\) are therefore primarily
+labels for learning and physical analysis, not indispensable inputs to the
+static graph encoder. This avoids hiding the answer inside the graph features.
+
+\subsection{GNN implementation in PyTorch Geometric}
+
+The GNN will be implemented in Python using \emph{PyTorch Geometric} (PyG), a
+PyTorch-based framework for learning on graphs, point clouds and other
+irregular data structures \cite{FeyLenssen2019}. Each aggregate is stored as
+one graph object with
+\begin{equation}
+  \mathcal{G}_A=
+  \bigl(\boldsymbol{X}_A,\boldsymbol{E}_A,
+  \boldsymbol{A}_A,\boldsymbol{u}_A,\boldsymbol{y}_A\bigr),
+  \label{eq:pyg_data}
+\end{equation}
+where \(\boldsymbol{X}_A\) contains particle/node features,
+\(\boldsymbol{E}_A\) identifies the contact or neighbourhood edges,
+\(\boldsymbol{A}_A\) contains edge features, \(\boldsymbol{u}_A\) contains
+the separately supplied aggregate and operating variables, and
+\(\boldsymbol{y}_A=[\eta_A,\tau_A,f_{\mathrm{poor},A}]\) contains the resolved
+targets. Graphs with different particle numbers can be combined in mini-batches
+without padding them to one fixed size.
+
+The initial architecture comprises three or four message-passing layers with
+edge features, followed by permutation-invariant global pooling. The pooled
+vector is the aggregate representation \(\boldsymbol{\lambda}_A\). It is
+concatenated with \(D_A\), \(N_A\), \(\Pe_A\), \(\Da_A\) and the local oxygen
+condition and passed to a small graph-level regressor. Edge-aware layers such
+as GINE are the primary option because relative distance, contact state and
+shielding are expected to matter; simpler graph-convolution and attention
+models provide baselines.
+
+This computational strategy has precedent in related physical systems.
+Sanchez-Gonzalez et al. represented particles as nodes and local interactions
+as edges to learn the dynamics of fluids, rigid solids and deformable
+materials \cite{SanchezGonzalez2020}. Graph representations have also been
+used to infer transport properties of pore networks from high-fidelity flow
+simulations \cite{IAnson2025}. These studies support graph-based learning for
+particle and transport systems, while the proposed morphology-aware oxygen
+closures for bioaggregates constitute the application-specific development.
+
+\subsection{Why use a GNN if the final closure is simple?}
+
+The GNN is an \emph{offline discovery and teacher model}. It answers whether
+topology contains predictive information beyond hand-selected descriptors and
+which parts of the contact/neighbourhood network matter. For each resolved
+aggregate,
+\begin{equation}
+  \boldsymbol{z}_r=\mathcal{E}_{\theta}(\mathcal{G}_r),
+  \qquad
+  \widehat{\boldsymbol{y}}_r=
+  \mathcal{H}_{\theta}
+  (\boldsymbol{z}_r,D_{A,r},\Pe_{A,r},\Da_{A,r}),
+  \label{eq:gnn_teacher}
+\end{equation}
+where \(\boldsymbol{y}\) contains \(\eta_A\), \(\tau_A\) and
+\(f_{\mathrm{poor},A}\), or the relevant subset for a given experiment.
+Attention/sensitivity analyses and comparison with conventional descriptors
+are used to interpret \(\boldsymbol{z}_r\).
+
+\subsection{Separation of morphology and operating conditions}
+
+The graph encoder must describe the aggregate structure only. Therefore, for a
+fixed aggregate \(i\),
+\begin{equation}
+  \boldsymbol{\lambda}_{A,i}
+  =\mathcal{E}_{\theta}(\mathcal{G}_{A,i})
+  \label{eq:morphology_encoder}
+\end{equation}
+is independent of the flow condition. The local operating conditions are
+introduced only in the subsequent prediction network:
+\begin{equation}
+  \widehat{\boldsymbol y}_{ij}
+  =\mathcal{H}_{\theta}
+  \left(
+  \boldsymbol{\lambda}_{A,i},D_{A,i},N_{A,i},
+  \Pe_{ij},\Da_{ij},C_{\infty,ij}
+  \right),
+  \label{eq:condition_decoder}
+\end{equation}
+where \(j\) identifies the operating condition and
+\begin{equation}
+  \boldsymbol y_{ij}
+  =
+  \left[
+  \eta_{A,ij},\tau_{A,ij},f_{\mathrm{poor},A,ij}
+  \right].
+\end{equation}
+This architecture prevents flow information from being mixed into the
+morphology descriptor.
+
+Consider ten fixed aggregate structures, each simulated under six different
+flow conditions. The resolved database then contains
+\begin{equation}
+  10\ \text{structures}\times6\ \text{conditions}
+  =60\ \text{labelled simulation cases}.
+\end{equation}
+However, the graph encoder produces only
+\begin{equation}
+  \boxed{10\ \text{unique morphology vectors}}
+\end{equation}
+because each fixed graph is encoded once. The same vector
+\(\boldsymbol{\lambda}_{A,i}\) is combined with six different sets of
+operating inputs:
+\begin{equation}
+  \boldsymbol{\lambda}_{A,i}^{(1)}
+  =\boldsymbol{\lambda}_{A,i}^{(2)}
+  =\cdots
+  =\boldsymbol{\lambda}_{A,i}^{(6)}.
+\end{equation}
+The six simulations teach the prediction network how one morphology responds
+to different environments; they do not define six different morphologies.
+
+More generally, for \(N_G\) fixed graphs and \(N_C\) operating conditions, the
+database contains \(N_GN_C\) labelled cases but only \(N_G\) unique morphology
+vectors. A separate morphology vector for each condition is appropriate only
+if flow causes deformation, restructuring or breakup, so that the underlying
+graph itself changes.
+
+The complete graph and GNN are unavailable for every PBM class or parcel in a
+reactor. WP4 therefore compresses the teacher into a deployable morphology
+coordinate. This reduction is not an arbitrary assignment; it is constructed
+and validated in four explicit steps.
+
+\subsection{Derivation of an interpretable morphology coordinate}
+
+\paragraph{Step 1: construct candidate physical descriptors.}
+For every aggregate in the resolved library, conventional and graph-derived
+descriptors are calculated before training. Candidate quantities include
+porosity \(\phi_A\), mean coordination number \(\bar Z_A\), anisotropy
+\(a_A\), accessible surface fraction \(s_{\mathrm{acc},A}\), mean shortest
+path from an internal cell to an accessible surface
+\(\ell_{\mathrm{surf},A}\), and transport-network measures such as the size of
+the connected pore or neighbourhood component. They form
+\begin{equation}
+  \boldsymbol{d}_A=
+  \left[
+  \phi_A,\bar Z_A,a_A,s_{\mathrm{acc},A},
+  \ell_{\mathrm{surf},A},\ldots
+  \right].
+  \label{eq:descriptor_vector}
+\end{equation}
+The set is intentionally compact and contains quantities that can ultimately
+be extracted from imaging, aggregate-generation simulations or empirical
+morphology distributions.
+
+\paragraph{Step 2: discover missing structural information with the GNN.}
+The GNN embedding \(\boldsymbol{z}_A\) is compared with
+\(\boldsymbol{d}_A\). Ablation tests answer whether size and porosity alone,
+then the full conventional descriptor vector, reproduce the resolved closure
+targets. The GNN is retained only if it reduces the prediction error on
+aggregates that were not used for training. Sensitivity analysis identifies
+which nodes, edges and descriptors drive this improvement.
+
+\paragraph{Step 3: define the reduced coordinate or classes.}
+Two alternatives are evaluated:
+\begin{align}
+  \lambda_A &=g(\boldsymbol{d}_A),
+  &&\text{continuous descriptor}, \label{eq:lambda_continuous}\\
+  m_A &=\mathcal{C}(\boldsymbol{z}_A)
+  \in\{\mathrm{M1},\mathrm{M2},\mathrm{M3}\},
+  &&\text{discrete classes}. \label{eq:lambda_classes}
+\end{align}
+The mapping \(g\) can be obtained by sparse regression or symbolic regression
+against the relevant GNN embedding coordinate and, more importantly, against
+the resolved transport targets. A purely illustrative result could be
+\begin{equation}
+  \lambda_A
+  \propto
+  \frac{s_{\mathrm{acc},A}}
+  {(1+\bar Z_A)\,\ell_{\mathrm{surf},A}},
+  \label{eq:lambda_example}
+\end{equation}
+where a high value represents an open, accessible structure and a low value a
+shielded structure with long internal paths. Equation~\eqref{eq:lambda_example}
+is not assumed beforehand; its functional form and necessity are determined
+from the data.
+
+If discrete classes are more robust, clustering is performed in the validated
+embedding space and the clusters are translated into physical descriptions.
+An anticipated, but not prescribed, interpretation is given in
+Table~\ref{tab:morphclasses}.
+
+\begin{table}[htbp]
+\centering
+\caption{Illustrative interpretation of reduced morphology classes. The final
+thresholds and number of classes are determined from the resolved database.}
+\label{tab:morphclasses}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.16\textwidth}
+                >{\raggedright\arraybackslash}p{0.38\textwidth}
+                >{\raggedright\arraybackslash}p{0.36\textwidth}}
+\toprule
+\textbf{Class} & \textbf{Structural interpretation} &
+\textbf{Expected transport tendency}\\
+\midrule
+M1: open &
+High accessible area, low shielding and short connected paths to the exterior &
+High effectiveness and small poorly supplied fraction\\
+M2: intermediate &
+Moderate connectivity, accessibility and path length &
+Intermediate transport limitation\\
+M3: shielded &
+Low accessible area, high coordination or long/tortuous internal paths &
+Low effectiveness and larger poorly supplied fraction\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Step 4: distil and validate the deployable closure.}
+The validated GNN teacher and the resolved cases are sampled over the required
+\((D_A,\lambda_A,\Pe_A,\Da_A)\) domain. A low-cost student is then fitted as
+either (i) a lookup table with interpolation, (ii) a symbolic correlation, or
+(iii) a small fully connected neural network if the dependence is too
+nonlinear for the first two forms. The student is accepted only if it remains
+accurate for withheld aggregate geometries and operating conditions.
+
+The three deployment forms are alternatives, not three sequential ML models.
+The preferred order is symbolic correlation, lookup table and then small ANN,
+based on the balance of interpretability, interpolation accuracy and numerical
+cost. A direct small ANN based only on prescribed bulk descriptors is retained
+as a baseline; the GNN is justified only if it adds demonstrable predictive
+information.
+
+Symbolic regression is therefore a genuine alternative to the final small
+ANN, rather than an additional layer placed after it. Using, for example,
+PySR, candidate expressions are fitted directly to the resolved/GNN-teacher
+data,
+\begin{equation}
+  \widehat{y}_k=
+  F_k(D_A,N_A,\lambda_A,\Pe_A,\Da_A,C_\infty),
+  \qquad
+  y_k\in\{\eta_A,\tau_A,f_{\mathrm{poor},A}\},
+  \label{eq:symbolic_student}
+\end{equation}
+while jointly considering prediction error and expression complexity. Physical
+constraints can restrict the admissible operators and enforce bounds such as
+\(0\leq\eta_A\leq1\) and \(0\leq f_{\mathrm{poor},A}\leq1\). This route is
+especially well motivated here because Cranmer et al. demonstrated that
+symbolic regression can distil trained graph networks into explicit physical
+relations \cite{Cranmer2020}; PySR provides a practical open-source
+implementation for scientific equation discovery \cite{Cranmer2023}. If no
+compact expression reaches the prescribed validation accuracy, the small ANN
+is retained as the deployable closure.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=7mm and 11mm]
+  \node[block] (dns) {\textbf{Resolved database}\\Graphs, \(\Pe_A,\Da_A\), cell-level oxygen fields};
+  \node[block, below=of dns] (teacher) {\textbf{Offline GNN teacher}\\Topology encoding and accurate closure targets};
+  \node[block, below=of teacher] (reduce) {\textbf{Structural reduction}\\Interpretable \(\lambda_A\) or morphology classes};
+  \node[decisionblock, below=10mm of reduce] (choice) {Deployment form};
+
+  \node[outputblock, below left=10mm and 23mm of choice] (symbolic)
+    {Symbolic correlation\\preferred when accurate};
+  \node[outputblock, below=10mm of choice] (table)
+    {Lookup table\\with interpolation};
+  \node[outputblock, below right=10mm and 23mm of choice] (ann)
+    {Small ANN\\for stronger nonlinearity};
+
+  \node[block, below=20mm of table] (coarse)
+    {\textbf{Online coarse model}\\CFD--PBM class or Euler--Lagrange parcel};
+
+  \node[note, right=17mm of teacher] (dynamic)
+    {\textbf{Transient branch}\\Fit the relaxation time \(\tau_A\) first. Use a
+    graph-conditioned Neural ODE only if one-time-scale dynamics fail; then
+    retain or distil the smallest validated dynamic model.};
+
+  \draw[flowarrow] (dns) -- (teacher);
+  \draw[flowarrow] (teacher) -- (reduce);
+  \draw[flowarrow] (reduce) -- (choice);
+  \draw[flowarrow] (choice) -- (symbolic);
+  \draw[flowarrow] (choice) -- (table);
+  \draw[flowarrow] (choice) -- (ann);
+  \draw[flowarrow] (symbolic) |- (coarse);
+  \draw[flowarrow] (table) -- (coarse);
+  \draw[flowarrow] (ann) |- (coarse);
+  \draw[optionalarrow] (dns.east) -| (dynamic.south);
+\end{tikzpicture}
+\caption{Machine-learning and model-reduction procedure. The GNN is an offline
+teacher; only one selected low-cost student closure is evaluated online.
+Neural ODE modelling is a conditional transient branch and is not required for
+the equilibrium closure.}
+\label{fig:mlflow}
+\end{figure}
+
+\subsection{Dynamic model and conditional role of Neural ODEs}
+
+The first dynamic model is deliberately simple. The aggregate carries a
+reduced oxygen or uptake state \(\chi_A\):
+\begin{equation}
+  \frac{\diff\chi_A}{\diff t}
+  =\frac{\chi_{A,\mathrm{eq}}
+  (C_{\mathrm{bulk}},\Pe_A,\Da_A,\lambda_A)-\chi_A}
+  {\tau_A(D_A,\lambda_A,\Pe_A,\Da_A)}.
+  \label{eq:relaxation}
+\end{equation}
+The response time is obtained from resolved step responses, for example using
+the integral of the normalised relaxation curve. This one-state equation is
+the primary deliverable because it is interpretable and inexpensive.
+
+Only if step, pulse and periodic tests show systematic multi-time-scale or
+hysteretic behaviour will a graph-conditioned Neural ODE be investigated:
+\begin{equation}
+  \frac{\diff\boldsymbol{\chi}_A}{\diff t}
+  =\boldsymbol{F}_{\theta}
+  (\boldsymbol{\chi}_A,C_{\mathrm{bulk}},\Pe_A,\Da_A,\lambda_A).
+  \label{eq:node}
+\end{equation}
+The Neural ODE does not automatically become a lookup table. It is either
+retained as a small dynamic operator or distilled into the lowest-order
+multi-state ODE that reproduces the resolved histories. This decision is made
+from validation evidence, not fixed in advance.
+
+\section{Closure Definitions and Use in the Coarse Model}
+
+\subsection{Equilibrium uptake}
+
+For a known biological kinetic law evaluated at local bulk oxygen,
+\begin{equation}
+  Q_{\mathrm{kin}}
+  =N_A q(C_{\mathrm{bulk}}),
+  \qquad
+  Q_{A,\mathrm{eq}}=\eta_A Q_{\mathrm{kin}}.
+  \label{eq:uptake}
+\end{equation}
+For example,
+\begin{equation}
+  q(C_{\mathrm{bulk}})
+  =q_{\max}\frac{C_{\mathrm{bulk}}}
+  {K_{\Otwo}+C_{\mathrm{bulk}}}.
+\end{equation}
+The closure in Eq.~\eqref{eq:eta_closure} corrects the hypothetical
+fully supplied rate for transport limitations caused by boundary layers,
+shielding and internal depletion.
+
+\subsection{Poorly supplied cell fraction}
+
+For a defined biological threshold \(C_{\mathrm{crit}}\), the resolved target is
+\begin{equation}
+  f_{\mathrm{poor},A}(t)
+  =\frac{1}{N_A}\sum_{i=1}^{N_A}
+  \mathbb{I}\!\left[C_i(t)<C_{\mathrm{crit}}\right].
+  \label{eq:fpoor}
+\end{equation}
+At equilibrium this is a direct closure of morphology and local conditions.
+Under transients, it additionally depends on the carried internal state
+\(\chi_A\). It is not an oxygen sink by itself; it is an exposure indicator
+available to models of growth, productivity, viability or metabolic state.
+
+\subsection{Local quantities seen by a PBM class or parcel}
+
+For an Euler--Lagrange parcel \(p\), the oxygen concentration supplied to the
+closure is interpolated from the carrier-phase field:
+\begin{equation}
+  C_{\infty,p}(t)
+  =
+  C\!\left(\boldsymbol{x}_p(t),t\right).
+  \label{eq:local_oxygen}
+\end{equation}
+This is the coarse-grid concentration surrounding the unresolved aggregate. It
+plays the role of \(C_{\mathrm{bulk}}\) in the particle-resolved training case,
+but it is neither a reactor average nor the unresolved concentration inside
+the aggregate. The local relative velocity and shear magnitude are, for
+example,
+\begin{align}
+  U_{\mathrm{rel},p}
+  &=
+  \left|
+  \boldsymbol{u}(\boldsymbol{x}_p,t)-\boldsymbol{v}_p
+  \right|,\\
+  \dot{\gamma}_p
+  &=
+  \sqrt{2\boldsymbol{S}:\boldsymbol{S}}\,
+  \big|_{\boldsymbol{x}_p},
+  \qquad
+  \boldsymbol{S}
+  =
+  \tfrac{1}{2}
+  \left(\nabla\boldsymbol{u}+\nabla\boldsymbol{u}^{T}\right).
+\end{align}
+Accordingly, the relevant P\'eclet number can be based on slip or shear:
+\begin{equation}
+  \Pe_{\mathrm{slip},p}
+  =\frac{U_{\mathrm{rel},p}D_{A,p}}{D_{\Otwo}},
+  \qquad
+  \Pe_{\mathrm{shear},p}
+  =\frac{\dot{\gamma}_pD_{A,p}^{2}}{D_{\Otwo}}.
+  \label{eq:local_pe}
+\end{equation}
+The closure development determines whether one of these definitions or both
+are required. An Eulerian CFD--PBM uses the corresponding local CFD values for
+each size--morphology class in a control volume.
+
+The final online closure therefore combines a morphology property carried by
+the parcel with aggregate properties and locally evaluated reactor
+conditions:
+\begin{equation}
+  \boxed{
+  \begin{bmatrix}
+  \eta_{A,p}\\[1mm]
+  \tau_{A,p}\\[1mm]
+  f_{\mathrm{poor},A,p}
+  \end{bmatrix}
+  =
+  \boldsymbol F
+  \left(
+  D_{A,p},N_{A,p},\boldsymbol{\lambda}_{A,p},
+  \Pe_p,\Da_p,\chi_p
+  \right)}.
+  \label{eq:online_closure_complete}
+\end{equation}
+Here \(\boldsymbol{\lambda}_{A,p}\) originates from the offline graph analysis,
+whereas \(\Pe_p\), \(\Da_p\) and the surrounding oxygen concentration are
+calculated from the local reactor state. In an Euler--Lagrange implementation,
+the fluid quantities are interpolated at the parcel position
+\(\boldsymbol{x}_p\), representing the centre of the unresolved aggregate.
+They are not values inside a particle-resolved sphere. For aggregates that are
+large relative to the CFD grid, a kernel-weighted average over neighbouring
+cells may be used instead of single-point interpolation.
+
+The online reactor model does not evaluate the complete GNN. It stores only
+\(\boldsymbol{\lambda}_{A,p}\), assigned at parcel creation from measured
+descriptors, an aggregate-generation model or a prescribed conditional
+distribution. The complete separation is
+\begin{equation}
+  \underbrace{
+  \mathcal{G}_{A,i}\longrightarrow
+  \boldsymbol{\lambda}_{A,i}}
+  _{\text{offline graph encoder}}
+  \qquad
+  \underbrace{
+  (D_A,N_A,\boldsymbol{\lambda}_A,\Pe_A,\Da_A,\chi_A)
+  \longrightarrow
+  (\eta_A,\tau_A,f_{\mathrm{poor},A})}
+  _{\text{online low-cost closure}}.
+  \label{eq:offline_online_separation}
+\end{equation}
+
+\subsection{Online calculation for one PBM class or parcel}
+
+The final model performs the following inexpensive calculation at each reactor
+location and time:
+
+\begin{enumerate}
+  \item Interpolate the local carrier-phase oxygen concentration
+  \(C_{\infty,p}\), velocity gradients, turbulence quantities and fluid
+  properties from CFD.
+  \item Read class/parcel properties \(D_A\), \(N_A\) and \(\lambda_A\).
+  \item Calculate \(\Pe_A\) and \(\Da_A\).
+  \item Query the selected lookup table, symbolic correlation or small ANN for
+  \(\eta_A\), \(\tau_A\) and \(f_{\mathrm{poor},A}\).
+  \item Calculate \(Q_{A,\mathrm{eq}}=\eta_A N_Aq(C_{\infty,p})\), update
+  the dynamic state with Eq.~\eqref{eq:relaxation}, and obtain current
+  \(Q_A\) and \(f_{\mathrm{poor},A}\).
+\end{enumerate}
+
+For a morphology-resolved PBM,
+\begin{equation}
+  n=n(D_A,\lambda_A,\boldsymbol{x},t),
+  \qquad
+  S_{\Otwo}(\boldsymbol{x},t)
+  =-\sum_{k,m}n_{k,m}Q_{A,k,m}.
+  \label{eq:pbm_sink}
+\end{equation}
+The same logic applies to an Euler--Lagrange parcel with statistical weight
+\(w_p\), whose sink contribution is \(-w_pQ_{A,p}\). The local number or
+fraction of poorly supplied cells is reconstructed by weighting
+\(f_{\mathrm{poor},k,m}\) with \(N_{A,k}n_{k,m}\), or the corresponding parcel
+weights. The reactor distribution therefore emerges from many local
+evaluations of single-aggregate closures, not from placing individual cells in
+the reactor mesh.
+
+If morphology is resolved only by discrete classes, the PBM carries a small
+number of size--morphology populations. If only a measured conditional
+morphology distribution \(P(\lambda_A\mid D_A)\) is available, the closures can
+be averaged over that distribution, with a documented loss of
+morphology-specific information.
+
+\subsection{How morphology is assigned in the reactor model}
+
+The transport closure cannot infer the morphology of an unresolved reactor
+parcel from local oxygen and shear alone. A morphology coordinate must
+therefore enter as a parcel property or PBM internal coordinate. Three levels
+of implementation are distinguished.
+
+\paragraph{Level 1: prescribed morphology distribution.}
+For the first reactor demonstrator, a parcel receives its morphology at
+injection or creation from a measured or simulated conditional distribution,
+\begin{equation}
+  \lambda_p\sim P(\lambda_A\mid D_{A,p}),
+  \qquad\text{or}\qquad
+  m_p\sim P(m_A\mid D_{A,p}).
+  \label{eq:morph_sampling}
+\end{equation}
+It then carries
+\begin{equation}
+  \left\{
+  D_{A,p},N_{A,p},\lambda_p,\chi_p,w_p
+  \right\},
+  \label{eq:parcel_state}
+\end{equation}
+and \(\lambda_p\) remains fixed along the trajectory. This is the reference
+assumption for demonstrating the oxygen closures without introducing an
+unvalidated morphology-evolution model.
+
+\paragraph{Level 2: descriptor-based assignment.}
+If imaging or an aggregate-generation model supplies porosity, coordination,
+anisotropy and accessibility, Eq.~\eqref{eq:lambda_continuous} is evaluated
+directly when the parcel is created. The coarse simulation stores only
+\(\lambda_p\), not the complete graph.
+
+\paragraph{Level 3: morphology-resolved population dynamics.}
+An extended PBM uses \(n(D_A,\lambda_A,\boldsymbol{x},t)\) and includes
+transition kernels for aggregation, growth, restructuring or breakup. These
+kernels determine how a new or transformed aggregate enters another
+morphology class. Their derivation is not part of the core oxygen-transport
+project. They may be supplied by experiments, aggregate-generation
+simulations or the existing breakup project.
+
+\subsection{Explicit assumptions of the first coarse-scale demonstrator}
+
+The proposed first implementation therefore assumes that:
+\begin{enumerate}
+  \item every parcel represents aggregates with one size and one reduced
+  morphology value or class;
+  \item the morphology distribution at parcel creation is known or prescribed;
+  \item morphology remains fixed during a parcel trajectory unless an external
+  transition model is supplied;
+  \item the local CFD concentration \(C_{\infty,p}\) is resolved on the reactor
+  mesh, whereas internal aggregate oxygen is represented only by \(\chi_p\);
+  \item the oxygen closure predicts uptake and exposure, not aggregate growth
+  or morphology evolution;
+  \item a separate biological law is required to convert oxygen exposure into
+  a PBM growth rate.
+\end{enumerate}
+
+These assumptions make the final use of the model unambiguous. The core
+deliverable is a morphology-conditioned oxygen model. A morphology-evolution
+model and an oxygen-dependent growth kernel are downstream couplings, not
+quantities silently inferred by the GNN.
+
+\section{Work Packages, Milestones and Outputs}
+
+\subsection*{WP1: Resolved framework, validation and morphology library}
+
+WP1 defines a reference biological system, implements conservative reactive
+transport in the particle-resolved solver and validates single particles,
+regular clusters and canonical flows. It constructs the controlled morphology
+library and establishes the feasible ranges of \(N_A\), \(\Pe_A\) and
+\(\Da_A\). \textbf{Milestone M1:} verified mass conservation, grid convergence
+and a database design that exhibits measurable transport limitation.
+
+\subsection*{WP2: Steady topology-dependent transport (H1)}
+
+WP2 performs steady uniform-flow, shear and HIT simulations across the designed
+structure--transport space. Paired structures with equal size and similar
+porosity isolate the effect of topology. The outputs are
+\(\eta_A\), \(Q_{A,\mathrm{eq}}\), equilibrium
+\(f_{\mathrm{poor},A}\), and a mechanistic analysis of shielding, accessibility
+and flow penetration. \textbf{Milestone M2:} quantitative acceptance or
+rejection of H1 and validated steady targets for model reduction.
+
+\subsection*{WP3: Transient oxygen response (H2)}
+
+WP3 applies step, pulse, periodic and selected reactor-derived oxygen histories
+to representative morphologies. It determines \(\tau_A\), tests the validity
+of the one-state relaxation model and introduces a higher-order ODE or Neural
+ODE only when justified. \textbf{Milestone M3:} a validated dynamic model over
+the relevant ratio of aggregate and reactor fluctuation time scales.
+
+\subsection*{WP4: Graph reduction and reactor-scale integration (H3)}
+
+WP4 trains and interprets the GNN teacher, constructs \(\lambda_A\) or discrete
+morphology classes, and distils the teacher into the simplest accurate online
+closure. The three closures are implemented first in an Euler--Lagrange
+demonstrator and, subject to feasibility, in a morphology-resolved CFD--PBM.
+\textbf{Milestone M4:} reactor-scale predictions of oxygen sink and
+oxygen-limited cell fractions with quantified closure uncertainty.
+
+The main outputs are therefore:
+\begin{enumerate}
+  \item a validated particle-resolved solver and database for reactive
+  transport in bioaggregates;
+  \item physical evidence for when topology matters beyond size and porosity;
+  \item closures for equilibrium effectiveness, oxygen-response time and
+  poorly supplied cell fraction;
+  \item an interpretable morphology representation discovered with graph-based
+  learning;
+  \item a verified low-cost closure implementation for CFD--PBM or
+  Euler--Lagrange reactor simulation.
+\end{enumerate}
+
+\section{Feasibility, Risk Control and Non-Overlap}
+
+The decisive preliminary test is whether realistic size and uptake ranges
+produce effects large enough to matter:
+\begin{equation}
+  \eta_A<1,\qquad
+  f_{\mathrm{poor},A}>0,\qquad
+  \tau_A/\tau_{\mathrm{reactor}}\not\ll1,
+  \label{eq:feasibility}
+\end{equation}
+and whether equal-size, equal-porosity structures differ beyond numerical and
+sampling uncertainty. A diffusion estimate
+\(\tau_D\sim R_A^2/D_{\mathrm{eff}}\) and a small resolved pilot matrix will
+determine the aggregate-size and kinetic ranges before the full database is
+generated.
+
+The project is modular if individual assumptions fail. If topology adds no
+information beyond conventional descriptors, that negative result supports a
+simpler closure without a morphology coordinate. If a single response time is
+sufficient, the optional Neural ODE is omitted. If morphology-resolved PBM
+transport is too expensive or lacks transition data, the closures are first
+demonstrated with Euler--Lagrange parcels or morphology-averaged PBM classes.
+
+Non-overlap with the running DFG project is defined by the predicted
+quantities. The existing project studies mechanical breakup onset, mechanism,
+fragment motion and daughter-size distributions and derives a breakup closure.
+The proposed project predicts reactive mass transfer, oxygen memory and
+cell-level oxygen exposure for prescribed morphologies. Shared numerical
+infrastructure and selected aggregate geometries constitute enabling
+preliminary work; the new simulations, labels, hypotheses and coarse-scale
+closures concern oxygen transport rather than mechanical failure.
+
+\section{Concise Project Statement}
+
+\begin{quote}
+The project will use particle-resolved DNS--DEM simulations to determine how
+bioaggregate topology controls equilibrium oxygen uptake, transient oxygen
+memory and the fraction of poorly supplied cells. A GNN will serve offline to
+discover and encode the necessary structural information. Its knowledge will
+then be distilled into one inexpensive deployable form---a symbolic
+correlation, lookup table or small neural network---which is evaluated for
+aggregate classes or parcels in a coarse CFD--PBM or Euler--Lagrange reactor
+model. The resulting framework will predict reactor-scale oxygen demand and
+the spatial distribution of oxygen-limited cellular material without resolving
+individual cells in the reactor.
+\end{quote}
+
+\input{preliminary_dem_gnn_documentation.tex}
+
+\begin{thebibliography}{99}
+
+\bibitem{WannerGujer1986}
+O.~Wanner and W.~Gujer,
+``A multispecies biofilm model,''
+\emph{Biotechnology and Bioengineering}, vol.~28, pp.~314--328, 1986.
+\href{https://doi.org/10.1002/bit.260280304}
+{doi:10.1002/bit.260280304}.
+
+\bibitem{Stewart2003}
+P.~S. Stewart,
+``Diffusion in biofilms,''
+\emph{Journal of Bacteriology}, vol.~185, pp.~1485--1491, 2003.
+\href{https://doi.org/10.1128/JB.185.5.1485-1491.2003}
+{doi:10.1128/JB.185.5.1485-1491.2003}.
+
+\bibitem{Wu2008}
+Y.~Li, Y.~Liu, L.~Shen, and F.~Chen,
+``DO diffusion profile in aerobic granule and its microbiological
+implications,''
+\emph{Enzyme and Microbial Technology}, vol.~43, pp.~349--354, 2008.
+\href{https://doi.org/10.1016/j.enzmictec.2008.04.005}
+{doi:10.1016/j.enzmictec.2008.04.005}.
+
+\bibitem{VandenBerg2020}
+L.~van den Berg, C.~M. Kirkland, J.~D. Seymour, S.~L. Codd,
+M.~C.~M. van Loosdrecht, and M.~K. de Kreuk,
+``Heterogeneous diffusion in aerobic granular sludge,''
+\emph{Biotechnology and Bioengineering}, vol.~117, pp.~3809--3819, 2020.
+\href{https://doi.org/10.1002/bit.27522}
+{doi:10.1002/bit.27522}.
+
+\bibitem{DeBeer1994}
+D.~de Beer, P.~Stoodley, F.~Roe, and Z.~Lewandowski,
+``Effects of biofilm structures on oxygen distribution and mass transport,''
+\emph{Biotechnology and Bioengineering}, vol.~43, pp.~1131--1138, 1994.
+\href{https://doi.org/10.1002/bit.260431118}
+{doi:10.1002/bit.260431118}.
+
+\bibitem{Chiu2007}
+Z.~C. Chiu, M.~Y. Chen, D.~J. Lee, C.~H. Wang, and J.~Y. Lai,
+``Oxygen diffusion in active layer of aerobic granule with step change in
+surrounding oxygen levels,''
+\emph{Water Research}, vol.~41, pp.~884--892, 2007.
+\href{https://doi.org/10.1016/j.watres.2006.11.035}
+{doi:10.1016/j.watres.2006.11.035}.
+
+\bibitem{Liu2010}
+L.~Liu, W.-W.~Li, G.-P.~Sheng, Z.-F.~Liu, R.~J.~Zeng, J.-X.~Liu,
+H.-Q.~Yu, and D.-J.~Lee,
+``Microscale hydrodynamic analysis of aerobic granules in the mass transfer
+process,''
+\emph{Environmental Science \& Technology}, vol.~44, pp.~7555--7560, 2010.
+\href{https://doi.org/10.1021/es1021608}
+{doi:10.1021/es1021608}.
+
+\bibitem{Liu2011Percolation}
+L.~Liu, G.-P.~Sheng, Z.-F.~Liu, W.-W.~Li, R.~J.~Zeng, D.-J.~Lee,
+J.-X.~Liu, and H.-Q.~Yu,
+``Characterization of multiporous structure and oxygen transfer inside
+aerobic granules with the percolation model,''
+\emph{Environmental Science \& Technology}, vol.~44, pp.~8535--8540, 2010.
+\href{https://doi.org/10.1021/es102437a}
+{doi:10.1021/es102437a}.
+
+\bibitem{Kreft2001}
+J.-U.~Kreft, C.~Picioreanu, J.~W.~T. Wimpenny, and
+M.~C.~M. van Loosdrecht,
+``Individual-based modelling of biofilms,''
+\emph{Microbiology}, vol.~147, pp.~2897--2912, 2001.
+\href{https://doi.org/10.1099/00221287-147-11-2897}
+{doi:10.1099/00221287-147-11-2897}.
+
+\bibitem{Picioreanu2004}
+C.~Picioreanu, J.-U.~Kreft, and M.~C.~M. van Loosdrecht,
+``Particle-based multidimensional multispecies biofilm model,''
+\emph{Applied and Environmental Microbiology}, vol.~70,
+pp.~3024--3040, 2004.
+\href{https://doi.org/10.1128/AEM.70.5.3024-3040.2004}
+{doi:10.1128/AEM.70.5.3024-3040.2004}.
+
+\bibitem{Marcato2022}
+A.~Marcato, G.~Boccardo, and D.~Marchisio,
+``From computational fluid dynamics to structure interpretation via neural
+networks: An application to flow and transport in porous media,''
+\emph{Industrial \& Engineering Chemistry Research}, vol.~61,
+pp.~8530--8541, 2022.
+\href{https://doi.org/10.1021/acs.iecr.1c04760}
+{doi:10.1021/acs.iecr.1c04760}.
+
+\bibitem{FeyLenssen2019}
+M.~Fey and J.~E. Lenssen,
+``Fast graph representation learning with PyTorch Geometric,''
+in \emph{ICLR Workshop on Representation Learning on Graphs and Manifolds},
+2019.
+\href{https://doi.org/10.48550/arXiv.1903.02428}
+{doi:10.48550/arXiv.1903.02428}.
+
+\bibitem{SanchezGonzalez2020}
+A.~Sanchez-Gonzalez, J.~Godwin, T.~Pfaff, R.~Ying, J.~Leskovec,
+and P.~Battaglia,
+``Learning to simulate complex physics with graph networks,''
+in \emph{Proceedings of the 37th International Conference on Machine
+Learning}, pp.~8459--8468, 2020.
+
+\bibitem{IAnson2025}
+J.~M. I'Anson, M.~J.~H. Simmons, E.~H. Stitt, and R.~W. Gallen,
+``Using graph neural networks to predict the permeability of porous media,''
+\emph{InterPore Journal}, vol.~2, no.~3, article IPJ250825-2, 2025.
+\href{https://doi.org/10.69631/ipj.v2i3nr47}
+{doi:10.69631/ipj.v2i3nr47}.
+
+\bibitem{Cranmer2020}
+M.~Cranmer, A.~Sanchez-Gonzalez, P.~Battaglia, R.~Xu, K.~Cranmer,
+D.~Spergel, and S.~Ho,
+``Discovering symbolic models from deep learning with inductive biases,''
+in \emph{Advances in Neural Information Processing Systems}, vol.~33,
+pp.~17429--17442, 2020.
+
+\bibitem{Cranmer2023}
+M.~Cranmer,
+``Interpretable machine learning for science with PySR and
+SymbolicRegression.jl,''
+\emph{arXiv preprint arXiv:2305.01582}, 2023.
+\href{https://doi.org/10.48550/arXiv.2305.01582}
+{doi:10.48550/arXiv.2305.01582}.
+
+\end{thebibliography}
+
+\end{document}

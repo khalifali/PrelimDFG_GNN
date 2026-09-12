@@ -1,0 +1,1225 @@
+%=====================================================================
+% _     _ _      ______           _
+%| |   (_) |     | ___ \         (_)
+%| |    _| |_    | |_/ /_____   ___  _____      __
+%| |   | | __|   |    // _ \ \ / / |/ _ \ \ /\ / /
+%| |___| | |_ _  | |\ \  __/\ V /| |  __/\ V  V /
+%\_____/_|\__(_) \_| \_\___| \_/ |_|\___| \_/\_/
+%=====================================================================
+%interwind
+%interwoven
+ \chapter{Literature Review on the Modeling of Breakage}
+\label{cha:literature_review}
+\fancyhead[ER]{Literature Review on the Modeling of Breakage}
+\fancyhead[OL]{Literature Review on the Modeling of Breakage}
+%=====================================================================
+%=====================================================================
+
+The deagglomeration of particles in fluid flows has been the subject
+of research for a long time. Various modeling approaches with varying
+degrees of complexity are found in the literature.  Provided that the
+presence of agglomerates is a prerequisite for breakage, the first
+section of this chapter looks at the available methods for handling
+the complex structure of agglomerates. Afterwards, studies focusing on
+the breakup of agglomerates due to fluid stresses and wall impact are
+explored.  The aim is to assess the state of existing models and to
+identify areas for potential improvements. Note that major parts of
+this review were published in the papers related to this thesis
+\citep{breuer2019revisiting,breuer2019refinement,khalifa2020data,khalifa2021efficient,khalifa2021les,khalifa2022neural}.
+ \newline
+
+It must be mentioned that breakage might additionally arise due to
+collisions between agglomerates and other agglomerates or
+particles. However, this mechanism is not addressed in the present
+thesis. Therefore, the collisions-induced breakage is not covered in
+this literature review.
+
+%That
+%is especially the case due to the difficulties encountered in
+%obtaining detailed experimental measurements, such as the wide range
+%of relevant
+%scales and the restricted optical accessibility due to the presence
+%of particles.
+%=====================================================================
+%=====================================================================
+\section{Structure of Agglomerates}
+\label{sec:litrev_structure}
+\fancyhead[OL]{Structure of Agglomerates}
+%=====================================================================
+%=====================================================================
+
+Agglomerates, also commonly denoted aggregates or flocs, describe
+clusters of particles interconnected by different types of binding
+mechanisms \citep{fayed2013handbook}. In some cases the geometry of
+agglomerates can be highly irregular, whereas in other cases
+agglomerates are referred to as fractal-like objects, since they show
+a high degree of self-similarity, but are not infinitely
+scale-invariant \citep{friedlander1977}. Hence, the morphology of
+agglomerates is typically characterized by a parameter denoted the
+fractal dimension, which varies between unity for chain-like
+arrangements and three for spherical ones. Exemplary
+sphere-like and open agglomerates are depicted in
+Figs.~\ref{subfig:sphere_like_agg}~and~\ref{subfig:open_agg},
+respectively.
+
+A special case is the isostatic structure
+(\cref{subfig:open_iso_agg}),  which exhibits a number of
+inter-particle contacts less than or equal to
+the number of primary particles minus one. Such a morphology evolves
+when chains
+of particles are cross-linked to form a larger agglomerate.  The
+assumption of isostatic  agglomerates is frequently encountered in
+the literature, since it  simplifies the modeling
+of breakage as will be discussed in
+\cref{sec:break_fluid_rigid}. \newline
+
+Particle-laden flow simulation methodologies which deal with cohesive
+particles can be distinguished into structure resolving and structure
+idealizing methods. In the former, the detailed morphology of
+agglomerates is fully taken into account
+(e.g.,~Figs.~\ref{subfig:sphere_like_agg}~--~\ref{subfig:open_iso_agg}),
+whereas the latter methods replace the structure by a single effective
+particle (e.g., Fig.~\ref{subfig:effective_agg}). Both techniques are
+discussed in the following.
+%
+%---------------------------------------------------------------------
+\begin{figure}
+	\label{fig:particle_laden_exam}
+	\centering
+	\psfrag{dag}[Bc][B][1][0]{$d_{\text{ag}}$}
+    \psfrag{rho}[Bc][B][1][0]{$\rho_{\text{ag}}$}
+	%
+	\subfloat[Sphere-like structure
+	\label{subfig:sphere_like_agg}]{
+		\includegraphics[draft=false,width=0.23\linewidth,trim=
+		0.0cm 0cm 0cm
+		0.0cm,clip]{figure/lit_rev/sphere_like_agg.eps}}%
+	\hfill
+	%
+	\subfloat[Open structure
+	\label{subfig:open_agg}]{
+		\includegraphics[draft=false,width=0.23\linewidth,trim=
+		0.0cm 0.0cm 0.0cm 0.0cm,clip]{figure/lit_rev/open_agg.eps}}%
+	\hfill
+	%
+	\subfloat[Open, isostatic structure
+	\label{subfig:open_iso_agg}]{
+		\includegraphics[draft=false,width=0.23\linewidth,trim=
+		0.0cm 0.0cm 0.0cm
+		0.0cm,clip]{figure/lit_rev/open_iso_agg.eps}}%
+		\hfill
+	%
+	\subfloat[Effective sphere
+	\label{subfig:effective_agg}]{
+		\includegraphics[draft=false,width=0.23\linewidth,trim=
+		0.0cm 0.0cm 0.0cm
+		0.0cm,clip]{figure/lit_rev/effective_agg.eps}}%
+	\\ \vspace{0.5cm}
+	\caption{Agglomerates represented by  detailed
+			structures (a)-(c) and
+			an idealized one based on an effective sphere (d).}
+\end{figure}
+%\texttt{http://visibleearth.nasa.gov}
+%---------------------------------------------------------------------
+
+%=====================================================================
+\subsection{Detailed Structure}
+%=====================================================================
+
+ In the first category the structure of the agglomerate is fully taken
+ into account, i.e., agglomerates are realized as assemblies of
+ primary particles. In addition, the dynamics of the agglomerates are
+ determined by the fluid-particle and inter-particle interactions
+ occurring at the scale of the constituting primary particles. Hence,
+ both types of interactions need to be adequately addressed.
+
+
+
+ The \emph{free-draining} approximation is the simplest approach
+ suggesting to entirely ignore the fluid shielding effects
+ \citep[e.g.,][]{becker2009restructuring}.  In a more reasonable
+ technique, the effect of the neighboring particles is accounted for
+ by incorporating a \emph{crowding factor} into the point-particle
+ force and torque models. For this purpose, a large number of
+ experimental \citep[e.g.,][]{di1994voidage} and particle-resolved
+ numerical \citep[e.g.,][]{beetstra2007drag} studies proposed
+ correlations describing the crowding factor as a function of the
+ particle Reynolds number and the mean local volume fraction of the
+ particles. However, most correlations are mainly focused on the drag
+ force and independent of the effect of the spatial arrangement (i.e.,
+ relative locations) of the particles, which can strongly vary despite
+ an equal local volume fraction.
+
+ To overcome these drawbacks, different possibilities are
+ available. One of them is the \emph{hydrodynamic screening} method,
+ which computes the fluid-induced forces and torques exerted on a
+ particle by considering solely the portion of the surface area of the
+ particle exposed to the flow field \citep[]{higashitani2001}.
+ Another alternative is the \emph{Stokesian dynamics}
+ \citep{durlofsky1987dynamic}, which allows to calculate the fluid
+ forces and torques exerted on the primary particles taking the
+ relative positions of particles into account. In this method the
+ fluid forces and moments are related to the velocities of the
+ particles by the so-called mobility matrix, assuming that particles
+ are surrounded by a flow field with a uniform velocity gradient,
+ i.e., a creeping flow. A more generally applicable technique is the
+ \emph{pairwise-interaction extended point-particle (PIEPP)} model,
+ which was recently proposed by
+ \citet{akiki2017pairwise,akiki2017pairwisepar,balachandar2020towards}.
+ The model allows to compute the drag and lateral forces on individual
+ particles within a random array while systematically accounting for
+ realistic surrounding flow conditions and for the relative positions
+ of the neighboring particles. \newline
+
+In principle, all above mentioned approaches can be considered for
+describing the fluid forces acting on aggregated particles while
+dealing with the inter-particle interactions based on one of two
+typical options: (1) the discrete element method (DEM), (2) the
+rigid-body dynamics.
+
+In the present terminology, \emph{DEM} refers to the method, in which
+the inter-particle forces and torques are computed based on a
+soft-sphere (i.e., viscoelastic) model. In addition, the velocity and
+displacement of each individual particle are obtained by integrating
+its equation of motion taking the external (i.e., fluid and gravity)
+and the internal (i.e., contact) forces into account
+\citep{cundall1979}. Hence, in DEM the attachment and detachment of
+particles are directly dictated by the resolved motion of
+particles. However, a stable and accurate DEM solution requires very
+small time increments, which can be much smaller than the flow
+time-step size especially for stiff particles (i.e., high modulus of
+elasticity).  Therefore, it is a very common practice to artificially
+scale down the modulus of elasticity to allow larger DEM time-step
+sizes. Note that DEM studies adopting the direct prediction for the
+breakup by fluid stresses and by wall impacts are discussed in
+Sections~\ref{sec:break_fluid_DEM}~and~\ref{sec:break_wall_DEM},
+respectively.
+
+The second possibility is more efficient since it treats agglomerates
+as \emph{rigid structures}
+\citep[e.g.,][]{seto2011hydrodynamic,vanni2011hydrodynamic,fellay2012effect,schutte2015hydrodynamic,debona2014}.
+In practice, rigid agglomerates indicate stable inter-particle bonds
+which remain fixed or spontaneously break when the exerted forces or
+torques exceed certain thresholds. Computationally, the motion of a
+rigid agglomerate is described by the translational and rotational
+velocities of the center of mass of the agglomerate. These velocities
+are obtained by solving the corresponding equations of motion of the
+whole agglomerate taking the external forces and torques acting on the
+constituting primary particles into account. The main advantage of
+this approach over typical DEM is that it does not necessitate the
+prediction of the internal interactions or solving the equations of
+motion for each primary particle.  However, the assumed rigidity of
+agglomerates implies that the primary particles are always intact and
+thus additional criteria are required to determine breakage. Further
+discussion on the modeling of the fluid-induced breakage for rigid
+agglomerates is given in Section~\ref{sec:break_fluid_rigid}. Note
+that to the best of the author's knowledge, studies dealing with the
+wall-impact breakage of rigid agglomerates with detailed structures do
+not exist in the literature.
+%by a two-step
+%procedure. In the first step, the total perturbation flow caused by
+%the presence of neighboring particles is obtained by superimposing
+%the perturbation flow due to each particle separately.
+
+%=====================================================================
+\subsection{Idealized Structure \label{sec:idealizied_stru}}
+%=====================================================================
+
+In the second category of studies, the detailed agglomerate morphology
+is replaced by a single particle conserving the mass of the original
+agglomerate. Very often the model particle is assumed to be a sphere
+characterized by an effective diameter (see
+Fig.~\ref{subfig:effective_agg}).
+
+Due to its practicality, the
+\emph{replacement technique} has been extensively utilized in the
+literature. For instance, the effective agglomerate diameter is an
+essential parameter which frequently appears in the closures, e.g.,
+the agglomeration and breakage kernels used in the population balance
+equation. The replacement approach is also popular in the
+Euler--Lagrange formalism
+\citep[e.g.,][]{breuer2015a,kosinski2011,ho2002,chun2005coagulation,van2020analysis}
+since it offers a considerable reduction of the computational load by
+giving up the continuous tracking and updating of the inter-particle
+contacts. In addition, modeling agglomerates as single spherical
+entities allows to apply the same closure relationships for the fluid
+forces (e.g., drag and lift and their corresponding drag and lift
+coefficients) developed for spherical primary particles to predict the
+motion of agglomerates. The effective sphere model is especially
+beneficial for simulations parallelized by domain decomposition
+techniques since the inter-processor communication and exchange of
+aggregated particles is not a simple task. \newline
+
+Certainly, an effective sphere provides solely an approximation of the
+dynamics of the original agglomerate.  The achieved accuracy was found
+to be affected by the considered definition of the effective diameter
+\citep{dietzel2016application}. In most studies, a volume-equivalent
+diameter is taken into account, which conserves the total volume as
+well as the total mass of the primary particles.  That requires the
+density of the agglomerate to be equal to that of the primary
+particles ignoring the interstitial spaces between the particles.
+
+\citet{breuer2015a} followed an extended approach denoted
+closely-packed sphere model. It accounts for the porous nature of
+agglomerates by defining the density of an agglomerate as the product
+of the density of the primary particle and a prescribed porosity
+value.  Consequently, the volume of the sphere representing the
+agglomerate structure is larger than the total volume of the
+constituting particles. Since agglomerates of different number of
+primary particles might arise in the simulations, the packing fraction
+(i.e., the complement of the porosity) of agglomerates was provided in
+a look-table depending on the number of particles.  The tabulated
+values of the packing fraction stem from an optimization study on the
+smallest volume of a cube enclosing a certain number of equal spheres
+without overlapping \citep{packomania2013}. Due to the assumption of
+closely packed particles in a cube, the resulting values of the
+packing fraction are found to be very high in comparison to the
+typical range of values for randomly packed, spherical particles
+\citep[e.g.,][]{yang2008agglomeration,scott1962radial,finney1970random}.\newline
+% \newline
+%Another drawback of the approach is that it only accounts for the
+%number of primary particles constituting the agglomerate in
+%determining its density and thus effective size.  Other relevant
+%factors, such as the packing method and the material properties,
+%namely cohesion are neglected.
+%
+%---------------------------------------------------------------------
+\begin{figure}
+	\centering
+	\psfrag{hull}[BL][Bc][1.][0]{Convex hull}
+	\includegraphics[draft=false,width=0.4\textwidth]{figure/lit_rev/convex_tecplot.eps}%
+	\caption{Convex hull wrapping an agglomerate consisting of 100
+		primary particles.}
+	\label{fig:convex_hull}
+\end{figure}
+%---------------------------------------------------------------------
+%
+
+To assess the suitability of the effective sphere assumption,
+\citet{harshe2010hydrodynamic} simulated the motion of rigid
+agglomerates in a uniform shear flow by means of Stokesian
+dynamics. Agglomerates of sizes varying between 10 and 1000 primary
+particles, possessing different open and sphere-like structures were
+investigated. It was shown that the simplifying effective sphere
+approach is useful to reproduce the behavior of realistic
+agglomerates. Specifically, sphere-like agglomerates can be well
+represented by equivalent spheres, whereas ellipsoids are more suited
+for open structures.
+
+Another important contribution in this area was presented by
+\citet{dietzel2013numerical} who performed particle-resolved
+lattice-Boltzmann simulations at low Reynolds numbers (i.e., Stokes
+regime) to investigate drag and lift force coefficients of
+agglomerates possessing different open and sphere-like structures. It
+was concluded that a drag force coefficient computed based on the
+diameter of a volume-equivalent sphere is not adequate since it
+remarkably deviates from the standard drag coefficient correlation by
+\citet{schiller33}.  A considerably better agreement was achieved
+based on a sphere with an area equal to the projected surface area of
+the convex hull wrapping the agglomerate (see
+Fig.~\ref{fig:convex_hull}). Namely, the diameter of a circle
+possessing an area equal to the projected cross-section area of the
+convex hull resulted in drag coefficients which are nearly independent
+of the morphology and the orientation of the agglomerates
+\citep{dietzel2013numerical,dietzel2016application}. However, unlike
+the drag coefficient, the lift force coefficient was not well
+predicted by any of the two structural assumptions (sphere and convex
+hull).
+
+In a subsequent study, \citet{sommerfeld2017novel} proposed a
+strategy for predicting the effective diameters of agglomerates based
+on a volume-equivalent convex hull. The model was developed for
+Euler-Lagrange point-particle simulations and can be summarized as
+follows: When an agglomerate appears, the volume of the convex hull
+enclosing the aggregated particles is computed. Subsequently, the
+relative positions of the agglomerated particles are stored and the
+agglomerate is replaced by a sphere with a volume equal to that of the
+convex hull. Upon further agglomeration or breakup, the positions of
+the added or removed particles are used together with the stored
+relative positions of the current particles to compute the volume of a
+new convex hull, and so forth. \newline
+
+The breakup of agglomerates idealized as spheres due to the
+interactions with a fluid flow field and as a result of wall impacts
+are discussed next in
+Sections~\ref{sec:break_fluid_sphere}~and~\ref{sec:break_wall_replace},
+respectively.
+
+%=====================================================================
+%=====================================================================
+\section{Breakup by Fluid Stresses}
+\label{sec:litrev_fluidstress}
+\fancyhead[OL]{Breakup by the fluid stresses}
+%=====================================================================
+%=====================================================================
+
+The role of fluid forces in splitting agglomerates has been
+computationally studied in a growing body of literature. Loosely
+speaking, independent from the level of resolution of the
+fluid-particle coupling (particle-resolved or point-particle) the
+breakup of agglomerates can be reproduced based on
+\emph{condition-free} methods or by imposing {external breakup
+  conditions}. Note that "condition-free" and "imposed conditions" in
+this context strictly refer to the forecasting of breakup.
+
+%=====================================================================
+\subsection{Fluid-Induced Breakup Predicted by Condition-Free
+Techniques}
+\label{sec:break_fluid_DEM}
+%=====================================================================
+
+As aforementioned, to enable a condition-free forecast of
+fragmentation of agglomerates the detailed structure must be taken
+into account. In addition, the equations of motion of each primary
+particle need to be solved.  Consequently, breakage follows directly
+from the equations of motion of the individual particles without
+additional modeling. Hence, in all studies discussed in this section
+the structures of agglomerates are fully taken into account and the
+inter-particle interactions are treated according to DEM.
+
+ Studies utilizing the most accurate approach, which combines
+ \textbf{resolved
+ fluid-particle interactions} with DEM have been concerned with the
+ development of dry powder inhalers
+ \citep[e.g.,][]{cui2018application,vanwachem2017simulation}. Within
+ the context of inhalers, different powder formulations are usually
+ discussed: The carrier-based formulation referring to drug particles
+ attached to a larger carrier as depicted in
+ Fig.~\ref{fig:carrier_agg}, and the drug-based (carrier-free)
+ formulation representing agglomerates of small drug particles
+ analogous to those shown in
+ Figs.~\ref{subfig:sphere_like_agg}~to~\ref{subfig:open_iso_agg}
+ \citep{longest2013aerodynamic}. Bearing in mind that the present
+ thesis deals with agglomerates resembling the carrier-free powder
+ type, the remainder of this review will focus on studies describing
+ the breakage of such agglomerates. Publications addressing the
+ disintegration of carrier-based agglomerates are of little value for
+ the scope of the present thesis and thus the interested reader is
+ referred to the relevant reviews, e.g., by
+ \citet{zheng2021flow,yang2015numerical,sommerfeld2019potential}.
+ \newline
+%Note
+%that such an approach is computationally not feasible and is limited
+%to fundamental investigations taking mostly a single agglomerate
+%into
+%consideration.
+
+ %---------------------------------------------------------------------
+\begin{figure}
+	\centering
+	\includegraphics[draft=false,width=0.3\textwidth]{figure/lit_rev/carrier.eps}%
+	\caption{Carrier-based powder formulation. This type of
+	agglomerates is not considered in the present thesis.}
+	\label{fig:carrier_agg}
+\end{figure}
+%---------------------------------------------------------------------
+%
+%----Point particle: DEM with crowding factor
+
+Other studies considered \textbf{unresolved particle} methods. These
+studies
+are grouped in the following based on the approach used for dealing
+with the fluid shielding within the agglomerate.
+
+The first group adopted the \emph{hydrodynamic screening method}.  In
+one of the earliest contributions, \citet{higashitani2001} studied the
+breakup of agglomerates in simple shear and elongational flows.
+Agglomerates possessing open, loose structures as well as spherical,
+rather compact structures were investigated.  The size of the
+agglomerates varied between 256 and 1024 identical particles. The
+effect of shielding on the fluid forces experienced by a particle was
+accounted for based on a geometrical analysis taking solely the
+exposed part of the surface area of the particle into account. In
+addition, the undisturbed local flow velocity was adjusted by a factor
+accounting for the presence of neighboring particles. It was shown
+that elongational flows induce higher breakup than shear flows. In
+addition, power-law relations describing the average number of
+particles in the broken fragments were proposed. Adopting the same
+methodology, \citet{fanelli2006prediction,fanelli2006prediction2}
+investigated the breakage of single agglomerates in steady and
+unsteady shear flows, respectively. \newline
+
+The second group employed the \emph{Stokesian dynamics}.
+\citet{harada2006dependence} studied the fragmentation of agglomerates
+in a simple shear flow. The scope was to compare the breakage behavior
+of two 100-particle agglomerates distinguished solely by the fractal
+dimension (open vs. sphere-like). It was pointed out that
+open-structured agglomerates are more fragile than spherical ones and
+that the breakup behavior in general depends on the strain and
+rotation effects in shear flows.  In an effort to reduce the
+computational costs associated with DEM,
+\citet{frungieri2021aggregation} presented a method, which combines a
+Stokesian dynamics and a stochastic Monte-Carlo algorithm to track
+single particles and detect the occurrence of binary collisions. A DEM
+approach was incorporated in the framework of Stokesian dynamics to
+solely describe the collisions of primary particles and the dynamics
+of the formed agglomerates.  The method was applied to study the
+agglomeration and breakup under a uniform shear flow condition for a
+suspension of monodisperse particles possessing a volume fraction of
+10$^{-4}$.  \newline
+
+In the third group of studies, the \emph{free-draining approximation}
+was applied.  \citet{becker2009restructuring} investigated the
+restructuring of single monodisperse agglomerates in a simple shear
+flow applying the free-draining approximation. To assess the
+appropriateness of the free-draining assumption, additional finite
+element simulations were carried out, in which the fluid flow around a
+small agglomerate comprising eight particles was fully resolved.  The
+obtained fluid forces on each particle were compared with results of
+standard constitutive force models assuming an undisturbed flow field
+around the particle. The analysis revealed that the free-draining
+assumption leads to an overestimation of the fluid forces experienced
+by the particles exposed to the flow field. Furthermore, the
+perpendicular forces induced by neighboring particles in the inner
+part of the agglomerates are underestimated.
+
+\citet{eggersdorfer2010fragmentation} examined the restructuring of
+single agglomerates of identical particles in a simple shear flow.
+Agglomerate comprising up to 2048 particles were generated by a
+hierarchical stochastic algorithm leading to widely open agglomerate
+structures.  It was highlighted that after agglomerates split, the
+arising fragments undergo a relaxation phase leading to more compact
+structures than the original agglomerates.
+
+  Another study using the
+free-draining assumption was published by
+\citet{calvert2011mechanistic} who evaluated the effect of cohesion,
+the diameter of the agglomerate, and the fluid-agglomerate relative
+velocity (commonly referred to as the slip velocity) on the
+disintegration of agglomerates in uniform flow. For this purpose,
+sphere-like agglomerates comprising a number of primary particles
+varying between 250 and 8000 particles were taken into account. In
+addition, five different slip velocities were considered and a range
+of one order of magnitude of surface energy values was considered. To
+characterize the breakup behavior, a parameter called the dispersion
+ratio was introduced, which related the number of broken contacts to
+the initial number of contacts. It was found that a higher relative
+velocity is needed to break an agglomerate if the surface energy of
+the particle increases.  In contrary, the onset of breakage for larger
+agglomerates takes place at lower slip velocities than in the case of
+small agglomerates. A correlation incorporating a dimensionless number
+analogous to the Weber number was found to characterize the dependence
+of the dispersion ratio and the operating (flow and agglomerate)
+conditions.
+
+In a recent study, \citet{zhao2021flocculation}
+investigated the dynamics of $10^4$ single cohesive particles in
+homogeneous isotropic turbulence employing one-way coupled DNS. A
+rapid aggregation phase was initially observed before a steady
+equilibrium phase prevailed due to the balance between agglomeration
+and breakup. The flow-shielding effects on the agglomerated particles
+were neglected.  It was found that agglomerates are elongated along
+the strongest Lagrangian stretching direction before breakage. Based
+on the obtained results, a
+model describing the transient development of the aggregate size and
+shape was proposed. \newline
+
+DEM-based methodologies accounting for the flow-shielding effect in
+the calculation of the drag force by a \emph{crowding factor} have
+been reported in different recent studies (the fourth group).
+\citet{dizaji2019collision} investigated the breakup of agglomerates
+in a linear shear flow focusing on the effect of the fluid forces and
+the collisions of two agglomerates. For this purpose, two sets of
+simulations involving one or two agglomerates were carried out.  The
+considered agglomerates were generated in a preceding DNS of
+homogeneous turbulence and had open (loose) structures consisting of
+328 to 577 evenly-sized particles. It was demonstrated that the
+breakage behavior, especially for open agglomerate structures, is more
+complex than can be reproduced by effective spheres.  Furthermore,
+\citet{chen2020collision} applied a coupled DNS--DEM to investigate
+the collision-induced breakage of agglomerates in homogeneous
+isotropic turbulence. After randomly seeding $4\cdot10^4$ single
+primary particles of the same size, the breakage of the small (mostly
+two-particle) agglomerates formed during the simulations was
+analyzed. In addition, a model for the rate of the collision-induced
+breakage in such flow scenarios was proposed. Moreover,
+\citet{yao2021deagglomeration} performed two-way coupled DNS--DEM to
+investigate the disintegration of single agglomerates in homogeneous
+isotropic turbulence. The closely-packed sphere-like agglomerates
+comprising 682 and 5500 equally-sized particles were composed by a
+centripetal packing procedure prior to the breakup investigations. As
+an outcome, a model describing the condition of breakup and the
+breakup rate was derived based on arguments motivated by the Taylor
+analogy breakup (TAB) model \citep{o1987tab}, which is readily used
+for droplet breakup. \newline
+
+Obviously, DEM-based methods are insightful and provide
+detailed
+knowledge on the primary particle scale. However, to keep the required
+computational efforts tractable, simplifications need to be made. Even
+in the most recent studies, the scope was restricted to single or few
+agglomerates under simple flow conditions. For these reasons, such
+detailed methods are still limited to fundamental investigations and
+not feasible for practical applications.
+
+%=====================================================================
+\subsection{Fluid-Induced  Breakup Predicted by Condition-Based
+Techniques}
+%=====================================================================
+
+In the conditions-based approaches, the equations of motion of the
+primary
+particles constituting an agglomerate are not individually solved.
+Instead, the agglomerates are tracked either as rigid bodies
+consisting of a number of particles, or as effective spheres. In
+either case, additional criteria are required to decide upon the
+occurrence of breakup. In the case of an effective sphere, additional
+models are needed to describe the arising fragment size distribution
+and the velocity of the fragments.
+
+%---------------------------------------------------------------------
+\subsubsection{Breakup of Rigid Agglomerates with Detailed Structures}
+\label{sec:break_fluid_rigid}
+%---------------------------------------------------------------------
+
+The first type of the conditions-based methods suggests to track
+agglomerates as single rigid entities while accounting for their
+detailed structures. This allows to determine the motion of the whole
+agglomerate without resolving the inter-particle interactions.
+However, in order to formulate a breakup criterion that makes use of
+the available morphology, knowledge on the inter-particle forces and
+torques becomes necessary. For general agglomerates possessing
+arbitrary structures, applying a force or a torque balance (external
+forces versus contact forces and likewise for torque) per particle
+leads to an ill-defined problem \citep{derksen2010potential}. This
+situation arises when the number of unique inter-particle contacts
+(i.e., unknowns) is larger than the number of particles (i.e.,
+equations).  For this purpose, isostatic agglomerates (e.g.,
+Fig.~\ref{subfig:open_iso_agg}) are frequently considered in the
+studies dealing with the restructuring (i.e., agglomeration and
+breakup) of rigid agglomerates.  An isostatic structure means that the
+number of inter-particle contacts is less than or equal to the number
+of particles minus one \citep{schutte2018formation}.  As a
+consequence, the structure is statically determined, i.e., imposing a
+force and a torque balance on each particle yields two closed systems,
+which can be solved to obtain the inter-particle forces and torques. 
+\newline 
+
+\citet{derksen2010potential} performed \textbf{particle-resolved}
+lattice-Boltzmann simulations to study the breakage of agglomerates in
+micro-channels under laminar flow conditions.  Agglomerates comprising
+solely 2 to 4 particles were tracked as rigid bodies, i.e., the
+interactions between the particles of the same agglomerate are not
+resolved. However, the collisions between agglomerates were considered
+by resolving the interactions between the colliding particles of
+different agglomerates based on a soft-sphere interaction model. Since
+the agglomerated particles were assumed to maintain their integrity,
+the scope of the problem was restricted to analyzing the development
+of the normal contact force between the particles. \newline 
+
+Considering an \textbf{unresolved particle} approach on the basis of
+\emph{Stokesian dynamics}, \citet{vanni2011hydrodynamic} examined the
+behavior of single agglomerates of different fractal dimensions
+immersed in simple shear flow. The inter-particle interactions within
+the agglomerates were computed by applying a force and a torque
+balance on each particle. Since the forecast of breakup requires to
+define critical thresholds for the forces and torques in three
+directions (i.e., six degrees of freedom), the focus was limited to
+examining the evolution of the inter-particle interactions within the
+agglomerate. 
+
+ Using the same method, \citet{seto2011hydrodynamic}
+studied the relation between the size of the agglomerates and the
+forces acting on the particle contacts in simple shear
+flows. 
+
+Furthermore, \citet{debona2014} followed a similar approach to
+investigate the breakup of agglomerates in homogeneous isotropic
+turbulence. The failure of contacts was solely attributed to the
+normal (tensile) stresses. Other possible breakup modes such as
+shearing, bending and twisting of contacts were not considered.
+Consequently, a critical tensile stress model suggested by the contact
+mechanics was employed to set a criterion for breakup. A simple case
+of two-particle agglomerates and a more complicated one involving
+agglomerates possessing open structures were considered.  As an
+outcome, a model describing the breakup rate in homogeneous isotropic
+turbulence was suggested.  In addition, it was found that the
+orientation of the agglomerate with respect to the flow, especially
+for the two-particle agglomerate, has considerable effects on breakup.
+
+In a recent work, \citet{frungieri2020cfd} studied the breakup of
+rigid aggregates in an internal mixer. Two-dimensional, unsteady
+simulations of the flow in the cross-section of the mixer were
+conducted at two different rotor speed ratios taking 100 tracer
+particles representing agglomerates in a one-way coupled simulation
+into account. In parallel, the interactions between the flow field and
+the detailed isostatic structure of each agglomerate were computed
+applying the Stokesian dynamics method. In addition, the
+inter-particle forces and torques were obtained based on balances
+imposed at each contact as typical in the rigid-body method. A bond
+was assumed to instantaneously rupture when it experiences a tensile
+force exceeding a prescribed critical threshold. However, no further
+elaboration on the relation between the critical tensile force and the
+particle properties was given. 
+
+\citet{schutte2015hydrodynamic} used the rigid, isostatic structure
+assumption to study the dynamics of asphaltene agglomerates including
+breakup in channel flows. The flow was simulated one-way coupled by
+means of DNS and LES considering four turbulent flow conditions and
+$2.5 \cdot 10^{5}$ primary particles. Solely the drag and added-mass
+forces were considered for the flow-particle interactions and the
+flow-shielding effect was neglected (\emph{free-draining
+approximation}). Four modes of breakage, i.e., straining (tensile),
+shearing, bending, and twisting were considered. However, the values
+of the critical forces and torques leading to breakup were varied to
+explore the breakup behavior for different levels of bond
+strength. Hence, no rigorous derivations of these quantities were
+proposed. In a subsequent investigation, \citet{schutte2018formation}
+extended their methodology to take the effect of two-way coupling into
+account.  The method was applied to study the breakage of agglomerates
+in channel flows. It was concluded that agglomerates tend to break
+into fragments of asymmetric sizes rather than identical
+ones.
+
+Moreover, a simplified version of the rigid-body model exists
+\citep{kousaka1979dispersion,kousaka1980re,kousaka1992dispersion,
+  niedballa2000modeling}. Therein, agglomerates are idealized by
+two-particle (doublet) structures and the contact forces are estimated
+to evaluate the possibility of breakup. The main drawback of this
+model is that the condition of breakage strongly depends on the
+relative orientation of the two-particle structure to the flow
+direction and on the size ratio of the two particles. Hence, the
+prediction of a breakup is strongly affected by modeling issues.
+\newline
+
+Overall, the assumption of rigid, isostatic agglomerates facilitates
+less CPU-intensive computations since the motion of each constituting
+particle does not need to be directly resolved. However, as pointed
+out before, tracking the structure especially in multi-block grids on
+parallel computers is rather complicated. Furthermore, isostatic
+agglomerates split as soon as a single contact within the agglomerate
+breaks up.  This is a specific case which does not necessarily
+represent the breakage behavior in the more general case of arbitrary
+(hyperstatic) agglomerates.  Finally, the main drawback of this
+modeling approach is the lack of rigorous models to describe the
+critical forces and torques leading to breakage.
+
+%---------------------------------------------------------------------
+\subsubsection{Breakup of Agglomerates Idealized as Spheres}
+\label{sec:break_fluid_sphere}
+%---------------------------------------------------------------------
+
+The second type of conditions-based methods describes the structure of
+agglomerates based on the \emph{effective sphere} approximation.
+Numerous studies have adopted this approach to study the fluid-induced
+breakup of agglomerates in the context of the Euler-Euler as well as
+the Euler--Lagrange framework. In the former, breakage rate models are
+required, whereas in the latter beside a breakage condition the size
+and the motion of the resulting fragments must be addressed. Such rate
+functions and breakage models are typically formulated based on
+simplified analytical derivations, experimental observations, or
+results of detailed numerical simulations.
+
+%$\mathcal{O} (10^4)$
+Characterizing the breakage of agglomerates and deriving predictive
+models has been the goal of several theoretical studies
+\citep[e.g.,][]{rumpf1932desagglomeration,thomas1964turbulent,
+  tomi1978behaviour,sonntag1987structure2,zaccone2009}. Therein, a
+general hypothesis was accepted, which states that breakage occurs
+when the fluid dynamic stress exceeds a critical threshold that
+strongly depends on the type of the inter-particle cohesive forces,
+i.e., the yield stress or the strength.  Consequently, the focus
+therein has been put on elucidating both sides of the problem
+considering agglomerates of idealized structures, e.g., porous spheres
+or cylinders, surrounded by various flow patterns ranging from simple
+uniform or shear flows to more complicated and irregular turbulent
+flows. \newline
+
+Considering \emph{simple flow cases},
+\citet{rumpf1932desagglomeration} described different disruptive
+mechanisms such as (1) the stresses acting on agglomerates
+accelerating or decelerating in a uniform flow field and the (2) shear
+and (3) centrifugal stresses imposed on agglomerates rotating in
+simple shear flows. The available analytical solutions for the
+considered simple flow cases allowed to determine the key flow
+quantities responsible for each mechanism.  Based on that, expressions
+for computing these fluid-induced stresses were derived considering
+various assumptions.  For example, the stress experienced by an
+agglomerate accelerating or decelerating in a flow field (often
+denoted \emph{inertia stress or drag stress}) was attributed to the
+relative velocity between the agglomerate and the fluid flow. Hence,
+it has been approximated by the ratio of the drag force acting on a
+spherical agglomerate to its surface area. In addition, an expression
+for the shear stress acting on the surface of spherical or cylindrical
+agglomerates in a shear flow was derived on the basis of the
+elasticity theory, assuming agglomerates as elastic objects.
+Moreover, the angular velocity of agglomerates in shear flows has been
+approximated based on the shear rate of the fluid, so that the
+application of the elasticity theory has led to the prediction of the
+stress developing in spherical or cylindrical agglomerates due to
+rotation, denoted \emph{rotary stress}. Furthermore, the stress
+threshold needed for a successful breakup has been introduced based on
+the famous model by \citet{rumpf1962}, who has postulated that the
+size of the primary particles, their structural properties, and the
+type of the binding mechanism are the main factors determining the
+strength of agglomerates.
+
+In the seminal work by \citet{tomi1978behaviour} the stresses
+developing within a sphere in simple shear or uniform flow fields have
+been elaborated in detail aiming to define planes of maximum stress,
+which resemble the likely surfaces of failure. The critical stress
+needed for breakup was related to the properties of the agglomerates
+as suggested by the yield stress model by \citet{thomas1963transport}
+which is similar to the model by \citet{rumpf1962}, albeit a slightly
+different relationship is used. As an alternative to the model by
+\citet{thomas1963transport}, the Bingham plastic yield model was
+suggested to estimate the critical yield stress beyond which
+agglomerates are assumed to become flowable and therefore
+split. \newline
+
+The breakup of agglomerates under \emph{turbulent flow conditions} has
+also been studied theoretically and experimentally by several authors.
+\citet{thomas1964turbulent} has suggested a breakup model, in which
+the mechanism of disruption is mainly referred to the pressure
+difference on opposite sides of the agglomerates caused by random
+velocity fluctuations. Assuming locally isotropic turbulence,
+Kolmogorov's theory of local isotropy has been applied to estimate the
+root-mean-square velocity fluctuations over distances comparable to
+the diameters of the agglomerates by integrating the energy spectrum
+over the range of wave numbers (eddy sizes) related to the size of the
+agglomerate. Two main subranges have been considered: The viscous
+subrange characterized by eddy sizes smaller than the Kolmogorov's
+length scale, and the inertial subrange, in which the eddies are much
+larger than the Kolmogorov's length scale but smaller than the
+integral length scale of turbulence.  The root-mean-square velocity in
+each subrange was used to calculate the turbulent stress imposed on
+agglomerates with sizes comparable to the corresponding eddy
+size. Consequently, breakage rate functions were derived taking the
+critical yield stress model \citep{thomas1963transport} into
+account. The rate functions were used to determine an average
+agglomerate size denoted steady-state diameter.
+
+Following similar arguments, \citet{neesse1987physikalische} collected
+formulas for estimating the root-mean-square velocity fluctuations in
+the viscous, inertial, and two intermediate subranges of turbulence
+from the literature. Subsequently, the proposed expressions are
+applied to compute the turbulent shear or normal stresses based on the
+nature of the flow in the corresponding subrange. It has been argued
+that the interactions between agglomerates and viscous eddies lead to
+surface shearing, and hence the expected breakup mode is erosion,
+whereas the interaction with inertial eddies results in bulk
+deformations or rupture. Note that these considerations are in line
+with the postulations and suggestions of \citet{gregory1989},
+\citet{muhle1993coagulation} and \citet{yeung1997effect}.
+Accordingly, the strength of the agglomerates has been included in the
+model taking the breakup mode (i.e., erosion or bulk rupture) into
+account. For rupture, the strength model by \citet{rumpf1962} was
+found adequate. However, a pseudo-surface tension model was proposed
+to describe strength against erosion \citep{neesse1987physikalische}.
+The background of this approach combines ideas from Rumpf's tensile
+strength model and from the Bingham plastic yield model.
+
+Motivated by observations of agglomerates breaking down due to
+unstable propagation of internal cracks, \citet{zaccone2009} provided
+a model, which aims at predicting the largest stable diameter of
+agglomerates in laminar and turbulent regimes. Applying an energy
+balance, the occurrence of breakup was attributed to the circumstance
+that the supplied energy by the fluid dynamic stresses exceeds the
+energy required for extending the fracture surface. Employing several
+empiric scaling laws and assumptions, a relationship correlating the
+applied stress $\sigma$ and the steady-state diameter of the
+agglomerate $d_{ag}$ was suggested in the form $\sigma = m \:
+d_{ag}^n$. This power-law relationship is generally in agreement with
+several experimental findings
+\citep[e.g.,][]{adler1979,sonntag1986structure,serra1997aggregation,
+  wengeler2007turbulent,soos2008effect,ammar2012,saha2015breakup}.
+However, it is noted that the correlation parameters depend on the
+flow configuration, the material, and the structure of the
+agglomerates, which explains the deviations in the values provided for
+the parameters $m$ and $n$ in the aforementioned studies. \newline
+
+The models discussed so far have been used in several subsequent
+\emph{computational studies}. For example, \citet{disskusters1991}
+studied the agglomeration and breakage of agglomerates comprising
+small polystyrene particles (1 $\mu$m) in isotropic and homogeneous
+turbulence. The breakup condition was derived by equating the
+turbulent stresses as introduced to the strength of the agglomerate
+based on an extended version of the model by \citet{rumpf1962} which
+accounts for the fractal dimension of the agglomerate. Based on these
+considerations a breakup rate function was derived.
+
+\citet{ammar2012} performed an Euler--Euler study on the breakup of
+Titanium dioxide agglomerates (0.1--10 $\mu$m) in a highly turbulent
+pipe flow (Re = $10^5$--$10^7$). The breakup rate was derived taking 
+the
+turbulent stresses and the strength of the agglomerates proposed by
+Rumpf into account. Despite neglecting its influence, the authors have
+pointed out the relative importance of the drag stress mechanism in
+their case, since the formed agglomerates are expected to possess
+considerable inertial characteristics. \citet{babler2008} investigated
+the breakage of small and light agglomerates in homogeneous turbulence
+using the Euler--Euler approach. Breakup was assumed to be invoked by
+sufficiently strong turbulent stresses. The rate of breakup was
+determined using a power-law function describing the maximum stable
+size of agglomerates under a given stress. \newline 
+
+%
+%Within the Euler--Lagrange framework, the assessment of breakup
+%in this technique follows from the evaluation of the fluid stresses
+%computed at the position of the point-particle agglomerates along
+%their trajectories and a subsequent comparison with a critical
+%threshold describing the cohesive strength.
+
+Within the Euler--Lagrange framework, a frequently reported practice
+is to record the stresses acting on the point agglomerate to evaluate
+the possibility of breakup, without actually modeling the
+fragmentation event. According to a very recent review by
+\citet{zheng2021flow} on the modeling of the flow in dry powder
+inhalers, this approach has been widely applied in the context of
+inhalers and is generally referred to as \emph{particle trajectory
+  modeling}.  For example,
+\citet{weiler2010new,dissweiler2008generierung} computed the
+turbulent, drag and rotary stresses acting on agglomerates while they
+are transported through an accelerated turbulent flow to identify the
+dominating stress in different regions of the
+configuration. \citet{longest2013aerodynamic} performed RANS
+predictions of airflow passages with varying flow conditions while
+tracking point particles representing agglomerates. The scope was to
+evaluate the potential effect of several flow quantities on the
+deagglomeration of powders in pharmaceutical inhalers. The evaluated
+quantities include the turbulent kinetic energy and the dissipation
+rate, the shear stress, and the number of wall hits among others. The
+possibility of breakage was evaluated based on a comparison with
+experiments conducted in parallel.
+
+Apart from powder inhalers, the particle trajectory modeling approach
+has been applied in more general Euler--Lagrange investigations.
+\citet{babler2012breakup} conducted a DNS of a diluted particle-laden
+homogeneous and isotropic turbulent flow to compute the so-called
+exit-time, which describes the time interval needed for agglomerates
+to reach flow regions where they become for the first time exposed to
+turbulent stresses greater than a critical threshold.  The exit-time
+has been used to develop breakup rates for each case, which can be
+further used in population balances. In a subsequent study by
+\citet{babler2015}, the critical stress was characterized by the size
+and fractal dimension of the agglomerate in a power-law relationship,
+and the same method was applied to derive breakup rates for various
+bounded and unbounded flows. \citet{marchioli2015turbulent} followed a
+similar approach to compute the exit-time, arguing that agglomerates
+tend to break in a ductile mode due to the accumulation of the
+stresses over time rather than the brittle (instantaneous) mechanism
+usually assumed. It was postulated that the process of breakage starts
+when the acting stress reaches a certain value and ends when the
+accumulated amount exceeds another prescribed threshold.
+
+It can be concluded that Euler--Lagrange methods dealing with the
+idealized sphere concept have mainly focused on describing the onset
+of breakage. Models for the resulting fragment size distribution and
+the velocity of the fragments are not well established.  For example,
+\citet{Njobuenwu2018} published an investigation on the agglomeration
+and breakup of agglomerates in a turbulent channel flow adopting the
+breakup model suggested by \citet{babler2015}. The breakup event was
+realized by replacing the broken agglomerate by two equally-sized
+fragments (symmetrical breakup). However, elaborations on the
+post-breakup kinetics of the fragments are missing. \newline
+
+In summary, different stress mechanisms (i.e., turbulent, drag and
+rotation) were identified in the literature to take part in the
+breakup of agglomerates in fluid flows. In addition, models describing
+the strength of agglomerates are also available. That enabled the
+specification of breakup conditions in various studies.  However,
+refined methodologies which deliver a complete description especially
+for the behavior of the arising fragments due to breakage in the
+context of the effective sphere approach are still missing.
+%
+%In summary, the Eulerian--Lagrangian description of particle-laden
+%flows has certain advantages in comparison to the Eulerian--Eulerian
+%approach
+%owing to its ability to track agglomerates through the flow field and
+%to investigate the effect of the flow on the breakup process without
+%predefined breakup rates. Various methodologies exist within the
+%Eulerian--Lagrangian approach to study the breakage phenomena.
+%Methods based
+%on determining inter-particle contact forces and torques are more
+%detailed than those describing agglomerates as porous nearly
+%spherical
+%structures. For instance, the size and velocity of the fragments
+%after
+%breakup can be directly predicted. However, due to their high
+%computational costs these methods are still restricted to a small
+%number of agglomerate comprising a moderate number of primary
+%particles. In addition, many simplifying assumptions have to be
+%incorporated to ease the handling of the complicated system. The
+%brief
+%literature overview shows a certain lack of comprehensive numerical
+%studies adopting the idealized sphere technique for studying breakup
+%processes in turbulent flows, and simultaneously taking breakup and
+%agglomeration of a huge number of particles into account.
+%
+
+%=====================================================================
+%=====================================================================
+\section{Wall-Impact Breakage}
+\label{sec:litrev_wallimpact}
+\fancyhead[OL]{Wall-Impact Breakage}
+%=====================================================================
+%=====================================================================
+
+In practical applications of particle-laden flow, the interactions
+between particles and the surrounding walls are often inevitable,
+which renders the mechanism of breakage by wall impact of particular
+interest.
+
+In an analogy to the case of the breakup by fluid stresses,
+particle-laden flow simulation methodologies which offer forecasting
+for the wall-impact breakage phenomena can be distinguished into two
+categories based on the level of captured details.  The first
+conserves the structure and applies DEM to describe the dynamics of
+the primary particles within the agglomerate. If an agglomerate hits a
+wall, the contact forces and torques exerted by the wall onto the
+wall-touching particles are computed according to the soft-sphere
+treatment. Consequently, these particles start to bounce against the
+wall leading to a propagation of the impact force into the next layer
+of neighboring particles and so forth. As typical for DEM, the
+disintegration of particles is directly governed by the force and
+torque balances applied on the level of the single
+particles. Exemplary studies adopting this approach, which combines
+computational fluid dynamics and DEM will be discussed in
+Section~\ref{sec:break_wall_DEM}.
+
+In the second method agglomerates are represented by effective
+spheres. In the absence of inter-particle contacts, the progress of
+the impact energy within the agglomerate causing the breakup of
+certain particle contacts cannot be determined. For this purpose,
+various efforts have been undertaken in the literature towards
+developing models describing the outcome of an impact event based on
+the conditions of the impact incident. The contributions relying on
+this concept are addressed in Section~\ref{sec:break_wall_replace}.
+
+%=====================================================================
+\subsection{Wall-Impact Breakage Predicted by Condition-Free
+Techniques}
+\label{sec:break_wall_DEM}
+%=====================================================================
+
+Investigations employing a direct wall-impact breakage forecasting
+have been mostly concerned with dry powder
+inhalers. \citet{tong2011numerical} carried out Euler--Lagrange
+simulations based on DEM to assess the deagglomeration performance of
+different inhaler designs taking mannitol (drug-only) agglomerates
+into account. The simulations employed single agglomerates consisting
+of 3000 polydisperse particles. Various configurations including five
+pipe bend designs and three volumetric flow rates were
+investigated. The pipe bends are distinguished by the number of bends
+(single or double) and the bend angle.  It was demonstrated that a
+pipe bend design that deflects the flow by a 90$^\circ$ using two
+45$^\circ$ bends delivers the best performance, i.e., the finest
+particle distribution at the outlet and the smallest amount of
+particle deposition on the wall. The results of the simulations are
+found to be in qualitative agreement with earlier experimental
+measurements \citep{adi2010impact}.  \citet{tong2013cfd} applied the
+same Euler--Lagrange DEM simulation technique to investigate the
+performance of a commercial dry powder inhaler
+(Aerolizer{\textregistered}). Eight agglomerates each comprising 3000
+mannitol particles were simultaneously taken into account. It was
+found that the wall-impact breakage is the most effective
+deagglomeration mechanism in the device.
+
+Again, the condition-free prediction of breakage based on DEM is
+CPU-time intensive and is currently limited to elementary
+investigation and a low number of considered agglomerates.
+% In a series on the deagglomeration performance of a commercial dry
+% powder inhaler (Aerolizer{\textregistered})
+% \citet{coates2004effect} investigated the effect of grid structure
+% and
+% mouthpiece length, the mouthpiece  inlet size
+% \citep{coates2006effect}, and mouthpiece geometry
+% \citep{coates2007influence} on the breakage of drug-only
+% agglomerates of mannitol
+% powders.
+
+%=====================================================================
+\subsection{Wall-Impact Breakage Predicted by Condition-Based
+Techniques}
+\label{sec:break_wall_replace}
+%=====================================================================
+
+Efforts towards understanding the wall-impact breakage phenomenon and
+developing predictive models have been reported in numerous
+experimental works
+\citep[e.g.,][]{john1993breakup,froeschke2003impact,samimi2004analysis,davies1951impingement}.
+In addition, fundamental DEM studies have been extensively carried out
+to study the breakage phenomenon focusing on impact events of single
+agglomerates in isolated environments. By precisely controlling the
+impact conditions, these simulations allowed to systematically
+evaluate the effect of the operating conditions on the fragmentation
+providing important insights which are not accessible by experiments
+\citep[e.g.,][]{thornton1996numerical,ning1997distinct,mishra2001impact,
+  moreno2003effect,tong2009numerical}.  In general, it can be
+concluded that the breakage behavior of agglomerates is influenced by
+several parameters: The properties of the primary particles and the
+impacted wall, the nature of the inter-particle binding mechanism, the
+structure of the agglomerate, and the dynamics of the agglomerate,
+i.e., the impact velocity and angle \citep{ghadiri2007analysis}. 
+\newline
+
+In an early attempt to formulate a criterion for the wall-impact
+breakage, \citet{kousaka1979dispersion} suggested a simple model based
+on theoretical arguments. They compared the compressive stress at the
+center plane of a perfect sphere impacting a wall with the tensile
+strength of the agglomerate as suggested by \citet{rumpf1962}.
+However, this approach suffers from a number of pitfalls. First, the
+stress is linearly related to the so-called collision time, which was
+not properly defined. In addition, the formula of the compressive
+stress is only valid for normal wall impacts and an extension towards
+oblique and shear impact events is not discussed. Lastly, the model
+does not offer any information on the resulting fragment size
+distribution or the kinetics of the arising fragments.  \newline 
+
+More recent research has followed a different strategy, which uses the
+data obtained from experiments and DEM simulations to develop and tune
+(semi-)empirical breakage models. A common practice in these studies
+is to characterize the outcomes of impact events by means of
+dimensionless numbers describing the functional relationship between
+various process parameters in a physically meaningful manner.
+Subsequently, phenomenological models are proposed in the form of
+correlations between the dimensionless numbers and the investigated
+breakage measures.
+
+For example, \citet{kafui1993powders} found that the damage ratio
+defined as the number of broken contacts over the number of initial
+contacts within an agglomerate can be expressed as a function of the
+Weber number defined by the impact velocity $v_{\text{imp}}$ and the
+diameter $d_\text{pp}$ and the surface energy $\gamma_s$ of the
+primary particle, i.e., $\text{We} \, = \, \rho_\text{f} \,
+d_{\text{pp}} \, v_{\text{imp}} /(2 \gamma_s)$.  This means that the
+damage ratio curves obtained under different conditions tend to
+collapse into a single curve when plotted as a function of
+We. However, this conclusion was found considering solely normal
+impact events carried out with different impact velocities and varying
+particle surface energies while keeping all other conditions fixed. In
+subsequent studies, \citet{thornton1996numerical} and
+\citet{subero1999effect} followed the same approach and suggested that
+a better representation of the results can be obtained based on a
+modified Weber number, in which the minimum velocity needed for
+starting breakage is subtracted from the impact velocity.
+
+\citet{moreno2006mechanistic} derived a new dimensionless number based
+on an energy balance assuming that the work needed for breaking all
+contacts within an agglomerate is proportional to the incident kinetic
+energy. The new dimensionless number can be seen as a product of the
+Weber number and a second dimensionless number including the particle
+diameter, the modulus of elasticity and the surface energy.  The
+proposed dimensionless number allowed an improved unification of the
+results, which was achieved over a wider range of surface energies.
+
+\citet{le2011aggregate} carried out 2D simulations for agglomerate
+breakage under normal and shear (wall-parallel) impact scenarios.  For
+normal impact, a dimensionless number analogous to the Weber number
+was considered. However, in the shear impact case a different
+dimensionless number was proposed, which describes the ratio between
+the frictional work and the work of cohesion. Based on these
+considerations, the values of the damage ratio obtained in each case
+were well unified by the corresponding dimensionless numbers. 
+\newline 
+
+Although these studies are very insightful contributions, it is
+important to point out the limitations that prevent a direct
+application of the models presented in these studies in particle-laden
+flow simulations. First, the investigations strictly focused on
+evaluating the effect of cohesion on the breakage of contacts. In
+other words, the relationship between a certain dimensionless number
+and the damage ratio was investigated while varying the inter-particle
+bond strength (i.e., surface energy or Hamaker constant).  However,
+the influence of other impact conditions such as the impact angle and
+the diameters and number of the primary particles was not
+appropriately taken into account since these parameters were fixed in
+the simulations. Another shortcoming is that the measure used for
+quantifying the results, i.e., the damage ratio, does not allow a
+unique description of the post-breakage particle size distribution
+since different breakage patterns can be observed for the same damage
+ratio \citep{tong2009numerical}. Moreover, the models also lack a
+description for the post-breakage motion of the disintegrated
+fragments.
+
+In a recent contribution, \citet{van2020analysis} have been probably
+the first to present a fragmentation model applicable for
+particle-laden flow simulations avoiding some of the main drawbacks
+mentioned above. The model relies on the data obtained by DEM
+simulations of normal wall-impact events accounting for agglomerates
+consisting of monodisperse particles. The reference simulations took
+into account a range of impact velocities, particle surface energy
+magnitudes, primary particle diameters, and agglomerate sizes.  The
+analysis of the results focused on characterizing the fraction of the
+detached primary particles based on an extended version of the
+dimensionless number proposed by \citet{moreno2006mechanistic}. In
+addition, the size distribution of the arising fragments was estimated
+by dividing the remaining volume of the original agglomerates into the
+largest possible number of discrete size classes after subtracting the
+volume of the detached primary particles. The study suggests to
+describe the post-breakage velocities of the fragments by means of a
+momentum factor. This factor expresses the fraction of the kinetic
+energy of the original agglomerate which is devoted to move the
+fragments after breakage. Although the introduction of a model that
+allows to determine the momentum factor based on the conditions of the
+impact event was part of the objectives of the study, a further
+elaboration on this issue is not available. Furthermore, it is not
+described in which directions the fragments are supposed to spread
+after breakage. The main drawback of the model is that it only
+provides forecasts for normal impact events since the effect of the
+impact angle was not investigated.
+
+It is worth mentioning that the concept of using detailed methods to
+develop practical wall-impact breakage models for Euler--Lagrange
+point-particle computations has been also applied in the context of
+carrier-based agglomerates
+\citep[e.g.,][]{vanwachem2017simulation,ariane2018wall}.  However, the
+suggested breakage models for carrier-based agglomerates mainly
+incorporate arguments specific for particles connected to a larger
+carrier.  Thus, they are generally not applicable for traditional
+agglomerates. Since the carrier-based formulation of agglomerates is
+not of interest for the present thesis as mentioned earlier, such
+studies are not further discussed here. The interested reader is
+referred to the relevant reviews, e.g.,
+\citet{zheng2021flow,yang2015numerical,sommerfeld2019potential}.
+\newline
+
+To conclude, models describing the wall-impact breakage in the context
+of the description of agglomerates as effective spheres are scarce.
+The advantages of the recent data-driven model by
+\citet{van2020analysis} over the simple theoretical model by
+\citet{kousaka1979dispersion} are clear since the former mimics both
+important features of the breakage scenario, i.e., the breakage onset
+and the fragment size distribution as predicted in detailed DEM
+simulations. However, since solely normal impact events were
+considered in the model by \citet{van2020analysis}, the applicability
+of the model in flow cases dominated by very small wall-impact angles
+must be explored.
+%Building on this argument, the model s
+% \citet{vanwachem2017simulation} correlated data from number of
+% resolved simulations to devise
+%the rate of detachment of fine particles from a carrier. The
+%detailed
+%simulations were designed to study the
+%detachment of the fine particles from a single carrier as a results
+%of a collision of two carriers, the impact of a carrier at the wall,
+%and the acceleration of a carrier in a flow field. In addition, the
+%re-attachment of the fines to the carrier was considered.   The
+%obtained models were used in LES simulations of complete dry powder
+%inhaler imposing a fluid flow obtained from a real inhalation
+%profile of a patient. The carrier particles in the inhaler
+%simulations were modeled as Lagrangian point masses applying DEM.
+%The evolution of the fine particles in the inhaler was taken into
+%account by introducing the volumetric concentration of the fines as
+%a passive scalar for which a conservation equation is solved. The
+%sources and sinks in the scalar equation are described by the
+%correlations obtained from the fully-resolved simulations.
+%
+%\citet{cui2018application} carried out fully-resolved
+%(i.e., particle-resolved fluid interactions coupled with DEM)
+%lattice-Boltzmann simulations for a carrier particle covered by a
+%single layer of monodisperse primary particle exposed to a plug
+%flow. The
+%detailed results obtained by this approach enabled the derivation of
+%simplified analytic models for the detachment of drug particles due
+%to
+%fluid forces. In a later study,
+%\citet{ariane2018wall} performed DEM simulations of
+%single carrier-based agglomerate impacting a wall and used the
+%results to propose an
+%analytic model for the
+%detachments of fines from carriers. Note that, in
+%general, the detachment models developed for the carrier-based
+%agglomerates are based on arguments specific for their own problem.
+%Thus they are generally not helpful for predicting the breakage of
+%typical agglomerates.

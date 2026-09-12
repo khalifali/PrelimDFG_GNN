@@ -1,0 +1,567 @@
+%=====================================================================
+%%  _____      _                 _            _   _
+%% |_   _|    | |               | |          | | (_)
+%%   | | _ __ | |_ _ __ ___   __| |_   _  ___| |_ _  ___  _ __
+%%   | || '_ \| __| '__/ _ \ / _` | | | |/ __| __| |/ _ \| '_ \
+%%  _| || | | | |_| | | (_) | (_| | |_| | (__| |_| | (_) | | | |
+%%  \___/_| |_|\__|_|  \___/ \__,_|\__,_|\___|\__|_|\___/|_| |_|
+%=====================================================================
+ \chapter{Introduction}
+\label{cha:introduction}
+\fancyhead[LO]{Introduction}
+\fancyhead[ER]{Introduction}
+%=====================================================================
+%=====================================================================
+
+The simultaneous flow of materials with different components or
+different states of matter such as gas, liquid, solid, and plasma is
+generally called multiphase flow.  The simplest case of a multiphase
+flow is the two-phase flow consisting of: (1) two states of the same
+component (e.g., water and steam), (2) two components of the same
+state
+(e.g., oil and water), or (3) two components of two different states
+(e.g., solid particles in gas). Computational methods have become a
+key tool for investigating the fundamentals of such flows allowing to
+explore the underlying physics in great detail and on different
+scales. Consequently, numerical simulations of multiphase flows are
+nowadays extensively employed to tackle engineering problems in
+several industrial branches.
+
+The scope of the present thesis is the numerical modeling and
+simulation of turbulent fluid flows involving cohesive solid
+particles. In particular, the focus is directed towards the breakage
+of agglomerates, which plays an important role in dictating the
+particle size distribution in many particle-laden flows.  The
+effective decrease of the particle size by the disintegration of
+agglomerates is in favor of obtaining desirable material properties
+and operational conditions, e.g., delivering medical aerosols with
+uniform dosing. On the contrary, breakage can be problematic as the
+reduction of the particle size decreases the settling velocity of
+particles in cyclone separators hindering the separation process.
+
+In this chapter some examples pointing out the significance of
+particle-laden flows in general will be discussed first, followed by
+an overview on the most important modeling approaches available in the
+literature (Section~\ref{sec:modeling_approaches}). In
+Section~\ref{sec:aims_objectives} the objectives of this thesis are
+elaborated and clearly defined. Lastly, the organization of the thesis
+is outlined in Section~\ref{sec:Outline}.
+
+% The motivation
+%for studying particle-laden flows is given in
+%Section~\ref{sec:motiv},
+%followed by an
+%overview on
+%the available numerical modeling approaches
+%in
+%Section~\ref{sec:modeling_approaches}. In
+%Section~\ref{sec:aims_objectives} the aims of this thesis are
+%elaborated and the objectives are clearly defined. Lastly, the
+%organization of the topics in this thesis is outlined in
+%Section~\ref{sec:Outline}.
+
+%The interactions
+%within the single phase and between the two phases give rise to
+%numerous complex yet interesting phenomena, which have been the
+%the subject of numerous experimental and numerical studies
+%throughout the last decades
+%=====================================================================
+%=====================================================================
+\section{Motivation for Considering Particle-Laden Flows}
+\label{sec:motiv}
+\fancyhead[OL]{Motivation for Considering Particle-Laden Flows}
+%=====================================================================
+%=====================================================================
+
+Particle-laden flows are abundant in nature. Typical examples of
+environmental processes include the formation of dust and sand storms,
+the transportation of sediment in rivers and streams, and the
+formation of ash clouds by volcanic eruption plumes. The satellite
+image shown in Fig.~\ref{subfig:sandstorm} depicts clouds of sand and
+dust originated from the Sahara (north Africa) and transported to the
+European continent across the Mediterranean Sea with a span of about
+10$^3$ km.  Such dust storms deteriorate the air quality, worsen the
+public health, and affect the frequency of North Atlantic hurricanes
+\citep{clifford2019}. Considering that the size of sand particles
+varies between microns and millimeters, the image portrays a special
+characteristic of particle-laden flows, which is the potential vast
+range of spatial and temporal scales involved in the physics of a
+single problem.  Another related example from nature is the Zambezi
+river delta depicted in Fig.~\ref{subfig:zambeszi}, which flows about
+230 km across six African countries to eventually pour its water and
+transported sediment into the Indian Ocean. This discharge of
+sediments preserves the quality and softness of the water inside the
+Delta, leading to fertile soil and suitable water for farming and
+fishing, respectively.  Unfortunately, the Zambeszi river nowadays is
+not capable of transporting the sediment out of the continent like it
+used to do due to the presence of hydropower dams upstream, which in
+turn reduce the flow of the river causing the sediment to accumulate
+\citep{disskunz2011effect}.
+
+%---------------------------------------------------------------------
+\begin{figure}
+\label{fig:particle_laden_exam}
+\centering
+%
+\subfloat[
+	\label{subfig:sandstorm}]{
+	\includegraphics[draft=false,width=0.485\linewidth,trim=
+ 0.0cm 0cm 0cm 0.0cm,clip]{figure/intro/sdusteurope_ann.eps}}%
+\hfill
+%
+\subfloat[
+	\label{subfig:zambeszi}]{
+	\includegraphics[draft=false,width=0.485\linewidth,trim=
+ 0.0cm 0.0cm 0.0cm 0.0cm,clip]{figure/intro/zambezi_ann.eps}}%
+\\ \vspace{0.5cm}
+%
+\hspace{2cm}
+\subfloat[
+	\label{subfig:dpi}]{
+	\includegraphics[draft=false,width=0.26\linewidth]{figure/intro/easyinhaler2.eps}}%
+\hfill
+%
+\subfloat[
+	\label{subfig:pollutant_fac}]{
+	\includegraphics[draft=false,width=0.49\linewidth]{figure/intro/Smoke2.jpg}}
+%
+\caption{Examples on particle-laden flows: (a) A dust storm traveling
+  from north Africa to Italy spanning about 10$^3$ km, (b) The
+  Zambezi river in Africa with a total length of 2574 km
+  pouring water and sediment into the Indian Ocean (Images: NASA,
+  Visible Earth), (c) A dry powder inhaler
+  \textit{Easyhaler\textsuperscript{\sffamily\textregistered}}
+  \citep[after][]{easyhaler}, (d) Exhaust fumes from smoking
+  chimneys (Image:
+  University of Freiburg).}
+\end{figure}
+%\texttt{http://visibleearth.nasa.gov}
+%---------------------------------------------------------------------
+
+Besides nature, particle-laden flows are present in various technical
+applications ranging from cyclone separators, particle-based solar
+receivers, pharmaceutical inhalers (see Fig.~\ref{subfig:dpi}) to the
+emission of pollutants in different industrial branches (see
+Fig.~\ref{subfig:pollutant_fac}). In many of these applications,
+particles are found to be naturally cohesive and the particle size is
+normally measured in microns. In this specific size range, the effect
+of cohesion is found to be significant and thus the presence of
+particles in the form of clusters (i.e., agglomerates) is very likely.
+However, agglomerates in turn are prone to breakage (i.e.,
+fragmentation) due to intense interactions with the turbulent flow or
+strong collisions with the surrounding objects. These circumstances
+are fulfilled in many applications since turbulent, wall-bounded flows
+(e.g., chimney, mouth piece of an inhaler) are dominant in
+practice. Hence, the size evolution of the particle phase in such
+systems is governed by a competition between counteracting physical
+phenomena.
+
+%---------------------------------------------------------------------
+\begin{figure}
+\centering
+\includegraphics[draft=false,width=0.6\textwidth]{figure/intro/new_lung.eps}%
+\caption{Inhalation of particulates
+in the human respiratory tract  \citep[after][]{leimao2011}.}
+\label{fig:lung}
+\end{figure}
+%\texttt{http://visibleearth.nasa.gov}
+%---------------------------------------------------------------------
+
+In fact, the particle size is a crucial feature for the aforementioned
+applications and others. For instance, the particle size plays a
+major role for optimizing the efficacy of inhaled medications or
+describing the harmfulness of particulate pollutants.
+Fig.~\ref{fig:lung} schematically depicts particles deposited in the
+human respiratory system. As illustrated, particles are able to reach
+different regions of the respiratory tract depending on their size
+among other factors \citep{darquenne2012aerosol}. In general, large
+particles \mbox{(> 6 $\mu$m)} are unable to exactly follow the paths
+of the inhaled air when a bend is met due to their high
+inertia. Consequently, large particles impact and deposit in the upper
+airways, e.g., in the nose or throat and thus drugs cannot be
+delivered
+to
+the lung tissues. In order to effectively treat the central and narrow
+airways, particles must be in the size range of 2 to 6 $\mu$m. Even
+smaller
+particles tend to penetrate deep into the
+alveolar region where the exchange of oxygen and carbon dioxide takes
+place or even into the bloodstream posing great health problems in
+case of pollutants.
+
+
+In summary, particle-laden flows are of paramount importance to
+diverse fields of science and engineering. The examples discussed
+above indicate that the profound knowledge of such flows can improve
+the human well-being through the optimization of medical and other
+consumable products and contribute  to the alleviation of serious
+environmental problems. In many cases, the design and the dynamics of
+particle-laden flows strongly depends on the particle size and its
+evolution within the system.  Therefore, it is inevitable to take
+phenomena such as agglomeration and breakup in predictions into
+account to obtain
+useful and physically meaningful forecasts. %Experimental research and
+%numerical
+%simulations are
+
+%    \AKp{importance for every day life and industry and complex
+%    nature due to wide range of scales involved. experiment and
+%    numerical tool are needed. the focus is on the breakage and
+%    agglomeration phenomenon}
+%the breakage of solid particle agglomerates dispersed in turbulent
+%flows.
+%Furthermore, the light is shed on the
+%interplay between breakage and agglomeration in flow scenarios
+%relevant in practice.
+%=====================================================================
+%=====================================================================
+\section{Modeling Approaches}
+\label{sec:modeling_approaches}
+\fancyhead[OL]{Modeling Approaches}
+%=====================================================================
+%=====================================================================
+
+A major challenge confronted in the computational modeling of
+turbulent particle-laden flows is the extensive range of length and
+time scales to be dealt with \citep{balachandar2009scaling}. This is
+because turbulence, which is inherently a multiscale phenomenon, needs
+to be described while additionally accounting for fluid-particle and
+inter-particle interactions occurring on various scales. Another
+challenge is posed by the inertial motion of relatively large and
+heavy particles, which can strongly deviate from the streamlines of
+the carrier fluid \citep{disscapecelatro2014}. The complexity of such
+flows inspired the development of different modeling approaches in the
+literature, which compete through the level of captured details and
+the computational expenses.  Fig.~\ref{fig:methods} schematically
+illustrates the main features of the different approaches, which will
+be briefly explained in the following.
+
+ %---------------------------------------------------------------------
+ \begin{figure}
+ 	\centering
+ 	\includegraphics[draft=false,width=1\textwidth]{figure/intro/methods.eps}%
+ 	\caption{Schematic representation of the common  modeling
+ 	approaches for
+ 	particle-laden flows
+ 	\citep[after][]{capecelatro2021modeling}.}
+ 	\label{fig:methods}
+ \end{figure}
+ %---------------------------------------------------------------------
+
+ The optimum modeling approach for a certain problem is traditionally
+ postulated based on a regime map distinguishing particle-laden flow
+ problems according to two features
+ \citep{elghobashi1991,elghobashi1994,balachandar2009scaling,balachandar2010}.
+ The first is the volume fraction of the solid phase, expressing how
+ dilute or dense a system is. The second feature is the particle size
+ or the particle response time relative to the corresponding smallest
+ turbulent scales. However, efforts are being continually undertaken
+ in the literature to extend the range of applicability of different
+ modeling approaches
+ \citep[e.g.,][]{balachandar2020towards,masi2014development,akiki2017pairwisepar,evrard2020euler}.
+ Hence, the limits defining the validity range of these methods are
+ relaxed leading to an increased flexibility in the decision making
+ process.  In the following, the attention is restricted to describing
+ the most important features of the numerical modeling approaches used
+ in recent research. \newline
+
+The first approach is the Euler--Euler (two-fluid model) formulation
+treating the continuous and the disperse phases as interpenetrating
+continua.  Consequently, conservation equations need to be solved for
+both phases. These are most frequently expressed based on the
+Reynolds-Averaged Navier-Stokes equations (RANS) delivering
+statistical descriptions of both phases
+\citep[e.g.,][]{elghobashi1983two,zhou2010advances}. Nevertheless,
+different studies have been recently devoted to develop instantaneous
+Euler--Euler methods in the context of large-eddy simulations (LES)
+\citep[e.g.,][]{moreau2010development,ma2015euler} and direct
+numerical simulations (DNS) \citep[e.g.,][]{masi2014development}. In
+the Euler--Euler approach the interactions between particles are not
+realized in terms of discrete collision events. Instead, the momentum
+transfer within the solid phase is modeled through the stress tensor
+appearing in the momentum conservation equation relying on an analogy
+with the fluid phase \citep{van2001comparative}.  In addition, the two
+phases are coupled by an exchange of momentum and energy. For this
+purpose, source terms described by constitutive models are introduced
+into the corresponding conservation equations
+\citep{balachandar2009scaling}.
+
+The Euler--Euler approach has been widely applied in simulations
+involving a huge number of particles since the computational load is
+related to the solution of the governing equations and does not scale
+with the number of particles \citep{sommerfeld2008}. However, if
+particles possessing different sizes are present (i.e., a polydisperse
+system), each size class is ideally treated as a different continuum
+(multi-fluid model). For this purpose, a set of conservation equations
+needs to be solved for each size class requiring considerably higher
+computational efforts \citep{kuerten2016}.  In addition, predicting
+the development of the particle size due to agglomeration and breakage
+requires coupling the Euler--Euler approach with CPU-time intensive
+population balance models
+\citep{ramkrishna2000population,marchisio2003quadrature}. The solution
+of the population balance equations depends on collision,
+agglomeration, and breakage rate functions, which are often termed as
+kernels. These kernels are mostly derived from experiments relying on
+certain assumptions regarding the flow and particle properties.  That
+renders the Euler--Euler solution in real applications heavily
+dependent on modeling issues since the discrete nature of the
+particles is ignored. \newline
+
+The other extreme is the fully resolved approach where the flow scales
+introduced by the particle beside all the scales of the ambient
+turbulence are completely resolved. Various methods can be used to
+capture the unsteady boundary layer around the particles and the
+resulting wakes. In the context of Navier-Stokes solvers, direct
+numerical simulations based on body-fitted spherical grids or on the
+immersed boundary method are common techniques
+\citep{burton2005fully,uhlmann2008,vreman2016particle,vowinckel2019consolidation,vowinckel2019settling,uhlmann2005}.
+As an alternative, fully resolved simulations can be conducted
+applying the lattice-Boltzmann method
+\citep{cui2018application,jebakumar2019fully,dietzel2016application}.
+Obviously, the fully resolved approach offers the most detailed
+description of the physics behind the fluid-particle interactions.
+Consequently, the motion of particles follows directly from Newton's
+second law using the resolved forces and torques imposed by the
+ambient fluid.  However, despite the ever-growing available
+computational power, such methods are still restricted to dilute
+systems involving up to $\mathcal{O} (10^4)$ particles
+\citep[e.g.,][]{de2019assessment,picano2015turbulent,jain2021impact,uhlmann2017clustering,vowinckel2014fluid,kempe2014relevance,kempe2012collision}.
+Even for such relatively small systems the problem becomes quickly
+intractable if agglomerates are present and the inter-particle
+interactions should be resolved in space and time. Hence, at the
+present time fully resolved simulations are not an affordable option
+to comprehensively investigate real applications.  Nevertheless, the
+insightful knowledge offered by the high resolution is frequently
+exploited to derive and improve closure models for the less detailed
+approaches. This is typically achieved by conducting resolved
+simulations in controlled configurations while focusing on a specific
+phenomenon, e.g., the drag force and the lift force
+\citep[e.g.,][]{beetstra2007drag,bogner2015drag,
+  yali2015new,akiki2020shear,kurose99,bagchi2002shear,holzer2009lattice,dietzel2016application}.
+Recently, the utilization of detailed results in improving efficient
+but less conclusive models has been greatly empowered by data-driven
+approaches relying on modern machine learning techniques
+\citep{montans2019data,duraisamy2019turbulence,beck2019deep,balachandar2020towards}.
+In particular, artificial neural networks have shown great potential
+to efficiently reproduce knowledge obtained under realistic operating
+conditions. That is a clear advantage over traditional models, which
+mostly refer to simplified scenarios. \newline
+
+The third approach is the Euler--Lagrange point-particle method, which
+finds a middle ground between the two extremes (Euler--Euler and fully
+resolved particle). In this framework the carrier fluid is treated as
+usual in the Eulerian frame of references. In addition, a Lagrangian
+tracking based on Newton's second law is applied to describe the
+motion of particles. However, in contrast to the fully resolved
+approach the particles are approximated as point-masses. Thus, the
+fluid-particle interface vanishes and the motion of particles is
+assumed to be governed by the local properties of the undisturbed flow
+at the particle center \citep{maxey83}. For this purpose, a variety of
+closure models has been proposed in the literature to describe the
+forces and torques exerted by the fluid in the equation of motion of
+the particle. If the volume fraction of the disperse phase is
+sufficiently large, it becomes necessary to account for the feedback
+effect of the particles on the fluid (i.e., two-way coupling). This is
+typically done by adding a source term to the momentum conservation
+equation of the fluid.
+
+Due to the circumstance that the small flow scales induced by the
+presence of particles are ignored, the ambient turbulence does not
+necessarily need to be fully resolved by time-consuming DNS. Depending
+on the required accuracy and the available computational resources
+alternatively, LES or RANS can be employed to predict the turbulent
+flow field \citep{balachandar2009scaling,kuerten2016}. The latter can
+offer a drastic reduction of the computational costs especially for
+statistically steady turbulent flow problems. This is attributed to
+the fact that the RANS solution solely provides an averaged
+description of turbulence allowing to "freeze" the mean flow field
+once the solution is developed. As a result, the tracking of particles
+follows as a post-processing step \citep{kuerten2016}.  However, the
+challenge here is that particles in reality interact with the
+instantaneous flow field and not the averaged one.  Therefore, the
+velocity fluctuations need to be mimicked by additional models of
+stochastic nature \citep{sommerfeld2008}. For these reasons, LES is
+gaining a considerable attention since it offers reasonably accurate
+instantaneous solutions by resolving the most important flow
+structures at moderate costs.  However, often the effects of the
+unresolved subgrid-scale structures on the flow field and the
+particles are not negligible and thus need to be adequately accounted
+for.
+
+Furthermore, the Euler--Lagrange method offers the possibility to
+describe the inter-particle interactions (i.e., four-way coupling) at
+different levels of detail. Owing to the persistence of the discrete
+nature of particles in this method, the collision events can be
+individually detected either by stochastic \citep{sommerfeld2001} or
+deterministic \citep{bird76,breuer2012b} algorithms. For particle-wall
+collisions the detection is even more straightforward.
+
+ Collisions lay the groundwork for important phenomena such as
+ particle agglomeration, particle-wall adhesion, and agglomerate
+ breakage. This implies that the prediction of these phenomena
+ substantially depends on the method by which the collisions are
+ treated. For this purpose, two methods are commonly applied. The
+ first is the soft-sphere approach, which is also known as the
+ discrete element method (DEM) \citep{cundall1979}. This method
+ describes collisions as gradually evolving processes which are
+ resolved in space and time. The interactions between a certain
+ particle and multiple others can be simultaneously taken into
+ account.  Consequently, particles form agglomerates and deposit at
+ walls according to the balance of forces between the interacting
+ objects. Hence, agglomeration and wall-adhesion are implicitly taken
+ into account without additional modeling.  Following the same
+ concept, the breakup of agglomerates and the re-suspension of
+ deposited particles naturally occurs. However, this direct prediction
+ is associated with high computational burdens since apart from the
+ costly full resolution of the collisions, the tracking of contacts is
+ not trivial. A cost-efficient alternative for the soft-sphere
+ treatment is the hard-sphere model which treats collisions as instant
+ events instead of resolving them in time \citep{crowe98}. In the
+ original formulation of this model solely the post-collision dynamics
+ are predicted by a momentum balance employing the pre-collision
+ conditions of the colliding objects. Agglomeration and wall adhesion
+ can also be predicted either by extending the underlying momentum
+ balance \citep{kosinski2009,kosinski2010,breuer2015a,almohammed2016b}
+ or by applying energy-based models
+ \citep{disshiller1981,dissjuergens2012,almohammed2016}. A drawback of
+ the hard-sphere model is that it solely handles binary collisions.
+
+  Agglomerates may be geometrically represented by their real,
+  fracture-like structures. In this case, a physically meaningful
+  description of the dynamics of the agglomerates requires a
+  continuous determination of the fluid-particle and particle-particle
+  interactions for each primary particle.  In another approach, the
+  structure of agglomerates is replaced by a single particle
+  possessing an effective diameter, which allows to track
+  agglomerates as single entities.  The discussion on both concepts
+  including the possible methods to treat the fluid-particle and
+  particle-particle interactions and their implications for the
+  prediction of the agglomerate breakage is extended in
+  Chapter~\ref{cha:literature_review}. \newline
+
+In summary, a variety of computational methods exist to describe
+particle-laden flows. The Euler--Lagrange approach combined with the
+point-particle approximations offers important advantages over the
+other methods. On the one hand, compared to Euler--Euler models, it
+allows a greater flexibility in the level of captured details for both
+phases and their coupling.  On the other hand, it offers a significant
+reduction of the computational costs (multiple orders of magnitude)
+over fully-resolved models. Consequently, simulating flows comprising
+millions of particles while accounting for diverse flow and particle
+phenomena is possible.  However, efforts are still required in order
+to further narrow the accuracy gap between the point-particle models
+and the fully resolved solutions.
+
+%=====================================================================
+%=====================================================================
+\section{Objectives of the Thesis}
+\label{sec:aims_objectives}
+\fancyhead[OL]{Objectives of the Thesis}
+%=====================================================================
+%=====================================================================
+
+The main goal of this thesis is to advance the current state of the
+art in computational modeling of particle-laden flows in an important
+yet less-established area.  More specifically, the scope is to develop
+physical models for numerical simulations describing the breakage of
+particle agglomerates in turbulent flows. The models are intended for
+(but not restricted to) the in-house CFD code \lesocc \ (Large-Eddy
+Simulation On Curvilinear
+Coordinates\nomenclature[A]{\lesocc}{Large-Eddy Simulation On
+  Curvilinear Coordinates})
+\citep{breuer1998,breuer1998b,breuer2000,habil2002}, which provides an
+efficient multiphase flow simulation methodology relying on large-eddy
+simulation for the continuous phase and a Lagrangian point-particle
+tracking for the disperse phase.  The aim is to propose an advanced
+simulation strategy capable of delivering reliable predictions of
+particle-laden flows in practically relevant setups. This can only be
+achieved by reasonably taking various important phenomena at
+manageable computational costs into account.
+
+In more practical terms, the objectives of the present thesis are to:
+
+\begin{enumerate}[label=(\arabic*),align=left, leftmargin=*]
+	\item Enhance the modeling of the structural features of
+          agglomerates, namely, the porosity and the coordination
+          number (i.e., average number of contacts per particle).
+
+	\item Develop a model for the breakage of agglomerates by
+          fluid-induced stresses.
+
+	\item Develop a model for the breakage of agglomerates by wall
+          impacts.
+
+     \item Apply the entire simulation methodology including the newly
+       developed models to investigate the breakage of agglomerates in
+       wall-bounded turbulent flows under various operating
+       conditions.
+\end{enumerate}
+
+For the first objective, an adequate representation of the porosity
+and the coordination number is sought. Since agglomerates are porous
+by nature, the porosity is an essential characteristic for determining
+the corresponding density and diameter of the spherical particles used
+to replace the structure of agglomerates in the present
+methodology. In addition, both the porosity and the coordination
+number are important parameters for determining the resistance of
+agglomerates against breakage, i.e., its strength.
+
+Simplifying the complex structure of agglomerates by single spheres
+poses certain challenges on the prediction of breakage, which need to
+be tackled. More specifically, the full characterization of a breakage
+event in the second and third objectives requires addressing three
+issues, hereafter called the breakage modeling tasks:
+
+\begin{enumerate}[label=(\roman*),align=left, leftmargin=*]
+ 	\item A criterion for the onset of breakage.
+ 	\item The number of resulting fragments and their size
+          distribution.
+ 	\item The velocity vectors of the fragments arising due to
+          breakage.
+ \end{enumerate}
+
+The attention in this thesis is restricted to spherical, monodisperse
+(i.e., equally-sized) primary particles in the micrometer size range.
+In addition, the particles are assumed to be dry and electrostatically
+neutral, and the cohesion between particles can solely be attributed
+to the van-der-Waals force. All other specific assumptions will be
+mentioned in the corresponding discussion.
+
+To realize the fourth objective, test cases inspired by experimental
+investigations reported in the literature are taken into account. The
+aim is to assess the influence of a wide range of operating conditions
+on the breakage of agglomerates and to analyze the interplay between
+breakage and other phenomena.
+
+%=====================================================================
+%=====================================================================
+\section{Outline of the Thesis}
+\label{sec:Outline}
+\fancyhead[OL]{Outline of the Thesis}
+%=====================================================================
+%=====================================================================
+
+This thesis is organized in ten chapters. The next chapter provides a
+literature review to identify and analyze modeling strategies for the
+structure of agglomerates, the breakage due to fluid stresses, and the
+breakage by wall impacts.
+
+ Chapters~\ref{cha:continuous_phase}~and~\ref{cha:disperse_phase}
+ present a theoretical background on the description of the continuous
+ and the disperse phase in the adopted Euler--Lagrange framework,
+ respectively.  The proposed models for the structural features of
+ agglomerates, the breakage by fluid-induced stresses, and the
+ wall-impact breakage are introduced in
+ Chapters~\ref{cha:agglomerate_structure},~\ref{cha:modeling_breakup_fluidstress},~and~\ref{cha:modeling_wallimpact_breakage},
+ respectively. Subsequently, the numerical methods used for computing
+ the continuous and the particle phase are explained in
+ Chapter~\ref{cha:numerical_methodology}. In
+ Chapter~\ref{cha:results_breakup_fluid}, LES predictions of
+ particle-laden flows in a generic powder disperser, a square duct,
+ and pipe bends relevant for dry powder inhalers are carried out and
+ the results are discussed in detail mainly focusing on issues
+ relevant for the breakage phenomenon.  Finally,
+ Chapter~\ref{cha:conclusions} summarizes the major findings and
+ conclusions from this work, and gives an outlook on related future
+ research possibilities.
+

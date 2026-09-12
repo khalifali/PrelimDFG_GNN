@@ -1,0 +1,33 @@
+# LaTeX temporary files
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.nav
+*.snm
+*.toc
+*.vrb
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+
+# Backups
+*_backup
+*.bak
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Literature and local references
+Inferring_the_Turbulent_Breakup_of_Colloidal_Aggre.pdf
+
+# Secrets and local configuration
+.env
+*.key
+*.pem
