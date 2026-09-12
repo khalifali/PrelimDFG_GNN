@@ -45,7 +45,8 @@
   \begin{beamercolorbox}[wd=\paperwidth,ht=3.2ex,dp=1.3ex]{author in head/foot}
     \hspace*{1em}\color{tumgray}Ali Khalifa and Heiko Briesen
     \enspace|\enspace Agglomerate morphology and geometric exposure
-    \hfill\insertframenumber/\inserttotalframenumber\hspace*{1em}
+    \hfill\insertsectionhead\hfill
+    \insertframenumber/\inserttotalframenumber\hspace*{1em}
   \end{beamercolorbox}}
 
 \graphicspath{{./figures/}}
@@ -102,6 +103,20 @@
     \column{0.41\textwidth}\centering
       \safeimage{./figures/uhrenturm.jpg}{1.05\linewidth}{4.5cm}
   \end{columns}
+\end{frame}
+
+% -----------------------------------------------------------------------------
+\begin{frame}{Presentation outline}
+  \tableofcontents
+\end{frame}
+
+\section[Motivation]{Motivation and research question}
+\begin{frame}{}
+  \vfill
+  {\large\color{tumgray}Section 1 of 5}\par\vspace{0.4cm}
+  {\LARGE\color{tumblue}\textbf{Motivation and research question}}\par\vspace{0.5cm}
+  {\large Why detailed morphology may matter for oxygen access}
+  \vfill
 \end{frame}
 
 % -----------------------------------------------------------------------------
@@ -162,6 +177,15 @@
     \column{.31\textwidth}\centering
       \hi{Interpretation}\\\small What structural information is retained?
   \end{columns}
+\end{frame}
+
+\section[Exposure target]{Agglomerate generation and exposure target}
+\begin{frame}{}
+  \vfill
+  {\large\color{tumgray}Section 2 of 5}\par\vspace{0.4cm}
+  {\LARGE\color{tumblue}\textbf{Agglomerate generation and exposure target}}\par\vspace{0.5cm}
+  {\large From synthetic particle structures to a continuous accessibility measure}
+  \vfill
 \end{frame}
 
 % -----------------------------------------------------------------------------
@@ -366,6 +390,15 @@
 	
 \end{frame}
 
+\section[Graph method]{Graph model and validation method}
+\begin{frame}{}
+  \vfill
+  {\large\color{tumgray}Section 3 of 5}\par\vspace{0.4cm}
+  {\LARGE\color{tumblue}\textbf{Graph model and validation method}}\par\vspace{0.5cm}
+  {\large From particle contacts to leakage-free graph learning}
+  \vfill
+\end{frame}
+
 % -----------------------------------------------------------------------------
 \begin{frame}{The relaxed agglomerate becomes a particle-contact graph}
   \begin{columns}[c,onlytextwidth]
@@ -467,6 +500,15 @@
   \takeaway{Every reported prediction is out-of-fold: it comes from a model that did not train on that parameter group.}
 \end{frame}
 
+\section[Results]{Results and interpretation}
+\begin{frame}{}
+  \vfill
+  {\large\color{tumgray}Section 4 of 5}\par\vspace{0.4cm}
+  {\LARGE\color{tumblue}\textbf{Results and interpretation}}\par\vspace{0.5cm}
+  {\large Predictive accuracy and what the latent coordinate retains}
+  \vfill
+\end{frame}
+
 % -----------------------------------------------------------------------------
 \begin{frame}{One graph coordinate predicts exposure with $R^2=0.954$}
   \begin{columns}[T,onlytextwidth]
@@ -566,6 +608,15 @@
   \end{columns}
   \vspace{.2cm}
   \takeaway{$\lambda_1$ combines several structural attributes in the direction most useful for predicting exposure.}
+\end{frame}
+
+\section[Conclusions]{Conclusions and next steps}
+\begin{frame}{}
+  \vfill
+  {\large\color{tumgray}Section 5 of 5}\par\vspace{0.4cm}
+  {\LARGE\color{tumblue}\textbf{Conclusions and next steps}}\par\vspace{0.5cm}
+  {\large What the evidence supports and what remains to validate}
+  \vfill
 \end{frame}
 
 % -----------------------------------------------------------------------------
