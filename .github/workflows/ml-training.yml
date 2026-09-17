@@ -2,15 +2,90 @@ name: Exposure ML comparison
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/ml-training.yml']
+    paths: ['codes/ml/**', '.github/workflows/ml-training.yml']
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
   group: exposure-ml-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
-  paused:
+  train:
     runs-on: self-hosted
+    timeout-minutes: 4320
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MPLBACKEND: Agg
     steps:
-      - run: echo "Training paused by user. Rebuild the 135-case tunable-fractal core before a new training campaign."
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Create isolated CPU training and bonded DEM environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          ML_ENV="$RUNNER_TEMP/fractal-ml-env-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          python3 -m venv "$ML_ENV"
+          "$ML_ENV/bin/python" -m pip install --upgrade pip
+          "$ML_ENV/bin/python" -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          "$ML_ENV/bin/python" -m pip install -r codes/ml/requirements.txt lammps==2025.7.22.4.0 mpich==5.0.1.post1
+          echo "$ML_ENV/bin" >> "$GITHUB_PATH"
+          echo "ML_OUTPUT=$RUNNER_TEMP/fractal-ml-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+      - name: Validate generator and learning implementation
+        run: |
+          python codes/generation/test_tunable.py
+          python codes/postprocessing/test_exposure.py
+          python codes/ml/test_pipeline.py
+          python codes/ml/test_fractal_splits.py
+      - name: Reproduce validated 135-case core plus 45 N500 cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$ML_OUTPUT"
+          python -m pip freeze > "$ML_OUTPUT/environment.txt"
+          python codes/generation/build_fractal_study.py --output "$ML_OUTPUT/geometries" 2>&1 | tee "$ML_OUTPUT/generation.log"
+      - name: Complete bonded DEM checks and Fibonacci exposure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/dem/prepare.py "$ML_OUTPUT/geometries" --output "$ML_OUTPUT/bonded"
+          python codes/dem/run.py "$ML_OUTPUT/bonded" --workers 2 2>&1 | tee "$ML_OUTPUT/dem.log"
+          python codes/postprocessing/visualize.py "$ML_OUTPUT/bonded" --rays 2048
+          python codes/ml/dataset.py "$ML_OUTPUT/bonded" --output "$ML_OUTPUT/final_dataset.json"
+      - name: Train historical-design core (135 independent new geometries)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/ml/train.py "$ML_OUTPUT/final_dataset.json" --particle-counts 50 100 200 --output "$ML_OUTPUT/core135" --epochs 300 --patience 50 --seeds 7 17 27 --q 1 2 3 4 --threads 2 2>&1 | tee "$ML_OUTPUT/core135.log"
+          cat "$ML_OUTPUT/core135/results.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve completed core comparison
+        uses: actions/upload-artifact@v4
+        with:
+          name: fractal-core135-${{ github.run_id }}
+          path: ${{ env.ML_OUTPUT }}/core135/
+          retention-days: 30
+      - name: Train extended 180-case comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/ml/train.py "$ML_OUTPUT/final_dataset.json" --output "$ML_OUTPUT/extended180" --epochs 300 --patience 50 --seeds 7 17 27 --q 1 2 3 4 --threads 2 2>&1 | tee "$ML_OUTPUT/extended180.log"
+          cat "$ML_OUTPUT/extended180/results.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Test extrapolation to 500 particles
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/ml/train.py "$ML_OUTPUT/final_dataset.json" --mode size500 --output "$ML_OUTPUT/size500" --epochs 300 --patience 50 --seeds 7 17 27 --q 1 2 3 4 --threads 2 2>&1 | tee "$ML_OUTPUT/size500.log"
+          cat "$ML_OUTPUT/size500/results.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve geometry, DEM, predictions, checkpoints and partial results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fractal-exposure-ml-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.ML_OUTPUT }}/
+          if-no-files-found: warn
+          retention-days: 30

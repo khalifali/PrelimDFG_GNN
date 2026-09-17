@@ -1,0 +1,18 @@
+{
+  "case_count": 180,
+  "historical_design_core": 135,
+  "extension_N500": 45,
+  "all_geometry_checks_passed": true,
+  "maximum_mass_radius_relative_error": 8.881784197001252e-16,
+  "master_seed": 18427,
+  "algorithm": "tunable particle-cluster seeds and hierarchical cluster-cluster merging",
+  "source_note": "Reconstructed formulation, not recovered historical generator or identical old coordinates",
+  "grouping": "Keep all diameters and realizations for each N/Df/kf together",
+  "python": "3.12.14",
+  "numpy": "2.2.6",
+  "source_sha256": {
+    "generate.py": "af1884b417604b28df02ee867aeca6c9de3d92a8d120270ce78988c4031b9a41",
+    "tunable.py": "e542f2eff5024e2bed9a386a82221102b24432c832941a702d0399fbd40bf724",
+    "build_fractal_study.py": "f148bace1ace53b8ef5e21e7911a96ae97df03d22a433995ab2e4062f4cc9309"
+  }
+}

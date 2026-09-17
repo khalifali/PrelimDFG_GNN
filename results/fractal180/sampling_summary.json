@@ -1,0 +1,23 @@
+{
+  "reference_rays": 8192,
+  "representatives": 12,
+  "scope": "Initial generated geometries only; finite reference, not exact truth or whole-dataset bound",
+  "results": {
+    "512": {
+      "max_mean_difference": 0.0013378906250000044,
+      "max_particle_difference": 0.0240478515625
+    },
+    "2048": {
+      "max_mean_difference": 0.0003253173828126066,
+      "max_particle_difference": 0.010986328125
+    },
+    "4096": {
+      "max_mean_difference": 0.00023620605468749334,
+      "max_particle_difference": 0.0078125
+    },
+    "rotated_2048_vs_unrotated_8192": {
+      "max_mean_difference": 0.0005126953125000888,
+      "max_particle_difference": 0.010986328125
+    }
+  }
+}

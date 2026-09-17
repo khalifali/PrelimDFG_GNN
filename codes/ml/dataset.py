@@ -76,7 +76,10 @@ def load_campaign(root, snapshot='final', tolerance=1e-6):
             raise ValueError('Invalid exposure target')
         g = graph_features(xyz, radii, tolerance)
         g.update(case=meta['case'], method=meta['method'], n=len(ids),
-                 group=f"{meta['method']}|{meta['n']}|{meta['detector_radius_over_r']}",
+                 group=meta.get('parameter_group') or f"{meta['method']}|{meta['n']}|{meta['detector_radius_over_r']}",
+                 diameter_um=float(meta['diameter_um']),
+                 requested_df=meta.get('requested_df',''),requested_kf=meta.get('requested_kf',''),
+                 study_subset=meta.get('study_subset','legacy'),
                  target=float(y.mean()), snapshot=snapshot, dump_sha256=digest, rays=info['rays'])
         records.append(g)
     if not records or len({r['case'] for r in records}) != len(records):

@@ -47,8 +47,25 @@ def splits(records, mode='grouped'):
         outer = [(np.array([i for i,g in enumerate(records) if g['n'] != 500]), np.array([i for i,g in enumerate(records) if g['n'] == 500]))]
     result = []
     for fold,(train,test) in enumerate(outer):
-        inner_train, inner_val = next(GroupShuffleSplit(n_splits=1,test_size=.15,random_state=701+fold).split(train,groups=groups[train]))
-        fit, val = train[inner_train], train[inner_val]
+        if all(g['method'] == 'tunable_fractal' for g in records):
+            # Keep morphology coverage in validation without separating any
+            # N/Df/kf group or consulting exposure targets or test performance.
+            rng = np.random.default_rng(701 + fold)
+            by_morphology = {}
+            for i in train:
+                key = (records[i]['requested_df'], records[i]['requested_kf'])
+                by_morphology.setdefault(key, set()).add(groups[i])
+            validation_groups = set()
+            for key in sorted(by_morphology):
+                choices = sorted(by_morphology[key])
+                if len(choices) < 2:
+                    raise ValueError('Need at least two training groups per morphology')
+                validation_groups.add(choices[int(rng.integers(len(choices)))])
+            val = np.array([i for i in train if groups[i] in validation_groups])
+            fit = np.array([i for i in train if groups[i] not in validation_groups])
+        else:
+            inner_train, inner_val = next(GroupShuffleSplit(n_splits=1,test_size=.15,random_state=701+fold).split(train,groups=groups[train]))
+            fit, val = train[inner_train], train[inner_val]
         assert not set(groups[train]) & set(groups[test])
         assert not set(groups[fit]) & set(groups[val])
         result.append((train,test,fit,val))
