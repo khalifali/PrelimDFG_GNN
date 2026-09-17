@@ -1,0 +1,16 @@
+{
+  "case": "bpca_N0050_rep05",
+  "method": "bpca",
+  "family": "bpca",
+  "detector_radius_over_r": null,
+  "replicate": 5,
+  "seed": 9492902112272725231,
+  "diameter_um": 1.0,
+  "n": 50,
+  "contacts": 49,
+  "connected": true,
+  "max_overlap_over_radius": 3.1086244689504383e-15,
+  "rg_over_radius": 5.8284942357033165,
+  "anisotropy": 0.1469303322110025,
+  "mean_coordination": 1.96
+}

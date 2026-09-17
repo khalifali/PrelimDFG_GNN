@@ -31,3 +31,12 @@ Inferring_the_Turbulent_Breakup_of_Colloidal_Aggre.pdf
 .env
 *.key
 *.pem
+# Reproducible generation views; case CSV/JSON files are retained.
+codes/generation/__pycache__/
+data/generation/**/*.vtk
+data/generation/**/*.png
+
+# Prepared DEM runs are packaged with results; regenerate using codes/dem/prepare.py.
+data/dem/
+codes/dem/__pycache__/
+codes/postprocessing/__pycache__/

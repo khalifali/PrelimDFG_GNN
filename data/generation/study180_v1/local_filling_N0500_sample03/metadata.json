@@ -1,0 +1,20 @@
+{
+  "case": "local_filling_N0500_sample03",
+  "method": "local_filling",
+  "family": "local_filling",
+  "detector_radius_over_r": 3.0,
+  "sample": 3,
+  "replicate": 1,
+  "seed": 439984940015880871,
+  "diameter_um": 1.0,
+  "compactness_score": 0.41954145814019134,
+  "structural_class": "compact",
+  "class_definition": "within_method_and_N_tertile",
+  "n": 500,
+  "contacts": 499,
+  "connected": true,
+  "max_overlap_over_radius": 5.551115123125783e-15,
+  "rg_over_radius": 18.918285918691776,
+  "anisotropy": 0.21728608877185485,
+  "mean_coordination": 1.996
+}

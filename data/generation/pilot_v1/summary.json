@@ -1,0 +1,22 @@
+{
+  "generator_version": "1.0",
+  "generator_sha256": "af1884b417604b28df02ee867aeca6c9de3d92a8d120270ce78988c4031b9a41",
+  "numpy": "2.3.5",
+  "python": "3.12.14",
+  "master_seed": 18427,
+  "case_count": 75,
+  "all_passed": true,
+  "counts": [
+    50,
+    100,
+    200
+  ],
+  "replicates": 5,
+  "diameter_um": 1.0,
+  "detector_radii_over_r": [
+    3,
+    6,
+    12
+  ],
+  "overlap_tolerance_over_radius": 1e-09
+}

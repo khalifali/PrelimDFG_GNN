@@ -1,0 +1,20 @@
+[
+  {
+    "case": "bpca_N0500_sample01",
+    "mean_exposure_512": 0.40886328125,
+    "mean_exposure_2048": 0.408814453125,
+    "max_particle_change": 0.0263671875
+  },
+  {
+    "case": "bcca_N0500_sample01",
+    "mean_exposure_512": 0.60222265625,
+    "mean_exposure_2048": 0.6017734375,
+    "max_particle_change": 0.02734375
+  },
+  {
+    "case": "local_filling_N0500_sample01",
+    "mean_exposure_512": 0.54303125,
+    "mean_exposure_2048": 0.5426845703125,
+    "max_particle_change": 0.02587890625
+  }
+]

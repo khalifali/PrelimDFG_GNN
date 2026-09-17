@@ -1,0 +1,54 @@
+name: Bonded agglomerates and exposure
+on:
+  push:
+    branches: [codex/bonded-campaign]
+    paths: ['codes/**', '.github/workflows/bonded-agglomerates.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  campaign:
+    # Use this repository's self-hosted runner, without a LAMFOAM-specific label.
+    runs-on: self-hosted
+    timeout-minutes: 45
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Create an isolated reproducible LAMMPS environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          envdir="$RUNNER_TEMP/prelim-bonded-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          python3 -m venv "$envdir"
+          "$envdir/bin/python" -m pip install numpy==2.3.5 lammps==2025.7.22.4.0 mpich==5.0.1.post1
+          echo "$envdir/bin" >> "$GITHUB_PATH"
+          echo "CAMPAIGN_ROOT=$RUNNER_TEMP/prelim-180-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+      - name: Test geometry and exposure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/generation/test_generation.py
+          python codes/postprocessing/test_exposure.py
+      - name: Generate all 180 and run bonded DEM
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/generation/build_study.py --output "$CAMPAIGN_ROOT/geometries"
+          python codes/dem/prepare.py "$CAMPAIGN_ROOT/geometries" --output "$CAMPAIGN_ROOT/bonded"
+          python codes/dem/run.py "$CAMPAIGN_ROOT/bonded" --workers 2
+          python codes/postprocessing/visualize.py "$CAMPAIGN_ROOT/bonded"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: study180-bonded-${{ github.sha }}
+          path: ${{ env.CAMPAIGN_ROOT }}/
+          if-no-files-found: warn
+          retention-days: 30
