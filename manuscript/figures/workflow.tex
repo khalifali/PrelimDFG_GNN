@@ -1,28 +1,43 @@
-\begin{figure}[p]
-\centering
-\begin{tikzpicture}[x=1cm,y=1cm,
- box/.style={draw,rounded corners,align=center,text width=5.2cm,minimum height=12mm,font=\small,fill=blue!5},
- wide/.style={box,text width=11.4cm},arr/.style={-{Latex[length=2mm]},thick}]
-\node[wide] (gen) at (0,0) {Generate 180 agglomerates\\3 algorithms, 4 sizes, 15 realizations};
-\node[wide] (dem) at (0,-1.8) {Auxiliary bonded DEM check\\retain initial and final structures};
-\node[wide] (split) at (0,-3.6) {Freeze identical agglomerate groups and test folds\\fit all model choices using training data only};
-\node[box] (graph) at (-3.1,-5.6) {Particle graph\\positions, particle and pair properties};
-\node[box] (desc) at (3.1,-5.6) {Six conventional descriptors\\size and connectivity measures};
-\node[box] (gnn) at (-3.1,-7.6) {GNN characterization\\learn $q$ artificial parameters};
-\node[box] (ann) at (3.1,-7.6) {Linear / random forest / ANN\\plus ANN with matched head};
-\node[box] (head) at (-3.1,-9.6) {Prediction from learned vector\\estimate mean geometric exposure};
-\node[box] (pred) at (3.1,-9.6) {Prediction from descriptors\\estimate mean geometric exposure};
-\node[wide] (test) at (0,-11.8) {Compare predictions on the same withheld agglomerates\\RMSE, MAE, $R^2$, seed variability and model complexity};
-\node[wide] (target) at (0,-13.8) {Reference target: ray-based geometric exposure\\calculated independently from geometry, never an input feature};
-\draw[arr] (gen)--(dem);\draw[arr] (dem)--(split);
-\draw[arr] ($(split.south)+(-3.1,0)$)--(graph.north);
-\draw[arr] ($(split.south)+(3.1,0)$)--(desc.north);
-\draw[arr] (graph)--(gnn);\draw[arr] (gnn)--(head);
-\draw[arr] (desc)--(ann);\draw[arr] (ann)--(pred);
-\draw[arr] (head.south)--($(test.north)+(-3.1,0)$);
-\draw[arr] (pred.south)--($(test.north)+(3.1,0)$);
-\draw[arr] (target)--(test);
-\end{tikzpicture}
-\caption{Updated study workflow. The graph route learns a structural representation; the descriptor route uses prescribed formulas. Both predict the same target under identical test splits. The planned comparison is repeated before and after DEM. Reference exposure supplies values for training and evaluation, not input features. ML stages remain pending.}
-\label{fig:workflow}
+\begin{figure}[!tbp]
+	\centering
+	\begin{tikzpicture}[
+		node distance=7mm and 8mm,
+		workflowbox/.style={
+			draw,
+			rounded corners=2pt,
+			align=center,
+			minimum height=14mm,
+			text width=3.7cm,
+			font=\small
+		},
+		arrow/.style={-{Latex[length=2mm]}, thick}
+	]
+		\node[workflowbox] (generation) {
+			\textbf{1. Generate agglomerates}\\
+			size, compactness and\\random realizations\\DEM consistency check
+		};
+		\node[workflowbox, right=of generation] (targets) {
+			\textbf{2. Define target}\\
+			mean geometric\\exposure
+		};
+		\node[workflowbox, right=of targets] (graphs) {
+			\textbf{3. Build graphs}\\
+			particles as nodes and\\contacts as edges
+		};
+		\node[workflowbox, below=of graphs] (compression) {
+			\textbf{4. Learn descriptor}\\
+			graph $\rightarrow \boldsymbol{\lambda}_A$\\$\rightarrow$ exposure
+		};
+		\node[workflowbox, left=of compression] (interpretation) {
+			\textbf{5. Interpret and compare}\\
+			physical meaning and\\comparison with scalars
+		};
+
+		\draw[arrow] (generation) -- (targets);
+		\draw[arrow] (targets) -- (graphs);
+		\draw[arrow] (graphs) -- (compression);
+		\draw[arrow] (compression) -- (interpretation);
+	\end{tikzpicture}
+	\caption{Five-step workflow for generating synthetic agglomerates, representing them as graphs, learning a compact structural descriptor and evaluating its physical meaning and predictive value. DEM is an auxiliary consistency check within generation, not a separate characterization step. The learning and comparison stages remain pending for the new dataset.}
+	\label{fig:workflow}
 \end{figure}

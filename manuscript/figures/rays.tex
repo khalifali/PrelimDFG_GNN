@@ -1,29 +1,59 @@
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[x=1cm,y=1cm,
- sphere/.style={draw=black!65,fill=blue!12,thick},
- clear/.style={-{Latex[length=2mm]},very thick,green!45!black},
- blocked/.style={-{Latex[length=2mm]},very thick,orange!90!black}]
-\draw[sphere,fill=blue!30] (0,0) circle (0.85);
-\node[align=center,font=\small] at (0,0) {particle $i$\\$\boldsymbol{x}_i$};
-\draw[sphere] (2.5,0) circle (0.65);
-\draw[sphere] (1.5,-2.1) circle (0.65);
-\draw[sphere] (-2,-1.3) circle (0.65);
-\draw[blocked] (0.89,0)--(1.85,0);
-\draw[clear] (0,0.89)--(0,2.1);
-\draw[clear] (-0.77,0.445)--(-2.3,1.33);
-\draw[clear] (0.63,0.63)--(2.1,2.1);
-\draw[blocked] (-0.746,-0.485)--(-1.455,-0.945);
-\draw[blocked] (0.517,-0.724)--(1.122,-1.571);
-\fill (0.63,0.63) circle (1.3pt);
-\node[align=left,font=\small,anchor=west] at (3.6,1.55) {Start just outside surface:\\$\boldsymbol{x}_i+(r_i+\varepsilon)\boldsymbol{s}_m$};
-\draw[thin] (0.63,0.63)--(2.7,1.0)--(3.5,1.0);
-\draw[clear] (3.65,0.3)--(4.5,0.3);
-\node[anchor=west,font=\small] at (4.65,0.3) {unblocked: $b_{im}=0$};
-\draw[blocked] (3.65,-0.5)--(4.5,-0.5);
-\node[anchor=west,font=\small] at (4.65,-0.5) {blocked: $b_{im}=1$};
-\node[align=left,font=\small,anchor=west] at (3.65,-1.65) {$a_i=1-\sum_m b_{im}/M$\\$\overline a_{\mathrm{geo}}=\sum_i a_i/N$};
-\end{tikzpicture}
-\caption{Surface-normal ray test for one particle. Unblocked rays contribute to exposure; blocked rays stop at the first intersected sphere, which need not be a contacting neighbour. The drawing is a two-dimensional illustration; the calculation samples the full three-dimensional sphere using Fibonacci directions. Rays represent geometric visibility, not fluid streamlines or diffusive trajectories.}
-\label{fig:ray_tracing_exposure}
+\begin{figure}[!tbp]
+	\centering
+	\begin{tikzpicture}[
+		x=1cm,y=1cm,
+		particle/.style={draw=black!75,thick,fill=blue!16},
+		tested/.style={draw=blue!70!black,very thick,fill=blue!28},
+		clear ray/.style={-{Latex[length=2.2mm]},very thick,green!55!black},
+		blocked ray/.style={-{Latex[length=2.2mm]},very thick,red!75!black},
+		label text/.style={font=\small,align=center}
+	]
+		% Neighbouring particles are drawn first so that the rays remain visible.
+		\foreach \x/\y/\r in {
+			4.55/0.55/0.63,
+			4.25/2.65/0.72,
+			2.30/3.45/0.67,
+			0.45/2.75/0.62,
+			0.30/0.60/0.68,
+			2.15/-1.15/0.63}
+			\draw[particle] (\x,\y) circle (\r);
+
+		% Particle whose exposure is evaluated.
+		\coordinate (C) at (2.15,1.25);
+		\draw[tested] (C) circle (0.78);
+		\fill[blue!70!black] (C) circle (1.5pt);
+		\node[label text,below right=6.5mm and -7mm of C]
+			{particle $i$\\centre $\boldsymbol{x}_i$};
+
+		% Unobstructed rays extend into the surroundings.
+		\draw[clear ray] (2.6,1.93) -- (3.70,3.50);
+		\draw[clear ray] (1.40,1.45) -- (-0.50,1.96);
+		\draw[clear ray] (1.58,0.70) -- (-0.20,-1.00);
+
+		% Blocked rays stop at the first neighbouring particle.
+		\draw[blocked ray] (2.90,1.03) -- (3.95,0.73);
+		\draw[blocked ray] (2.80,1.68) -- (3.65,2.25);
+		\draw[blocked ray] (1.56,1.77) -- (0.92,2.34);
+
+		% Ray-start offset and direction annotation.
+		\fill[black] (2.6,1.93) circle (1.4pt);
+		\node[label text,above right=1mm and 10mm of C,shift={(0,0)}]
+			{$\boldsymbol{x}_i+(r_i+\varepsilon)\boldsymbol{s}_m$};
+		\node[label text,right] at (2.95,3.5) {$\boldsymbol{s}_m$};
+
+		% Compact legend.
+		\draw[clear ray] (6.35,2.65) -- (7.25,2.65);
+		\node[label text,right] at (7.28,2.65)
+			{unobstructed\\$b_{im}=0$};
+		\draw[blocked ray] (6.35,1.35) -- (7.25,1.35);
+		\node[label text,right] at (7.28,1.35)
+			{blocked\\$b_{im}=1$};
+	\end{tikzpicture}
+	\caption{Schematic of the ray-tracing calculation for one particle $i$.
+		Rays start just outside its surface and follow sampled outward directions
+		$\boldsymbol{s}_m$. A ray is blocked when it intersects another particle;
+		otherwise, it contributes to the exposed fraction. For clarity, only a
+		two-dimensional section and a small subset of rays are shown; the actual
+		calculation distributes $M=512$ directions over the complete sphere.}
+	\label{fig:ray_tracing_exposure}
 \end{figure}
