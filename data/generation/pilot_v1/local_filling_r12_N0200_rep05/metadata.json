@@ -1,0 +1,16 @@
+{
+  "case": "local_filling_r12_N0200_rep05",
+  "method": "local_filling",
+  "family": "local_filling_r12",
+  "detector_radius_over_r": 12,
+  "replicate": 5,
+  "seed": 13015318015882994006,
+  "diameter_um": 1.0,
+  "n": 200,
+  "contacts": 199,
+  "connected": true,
+  "max_overlap_over_radius": 3.552713678800501e-15,
+  "rg_over_radius": 21.631536838180157,
+  "anisotropy": 0.060026930833860015,
+  "mean_coordination": 1.99
+}

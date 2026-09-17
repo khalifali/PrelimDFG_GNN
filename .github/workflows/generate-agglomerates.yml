@@ -1,0 +1,42 @@
+name: Generate diverse agglomerates
+on:
+  push:
+    branches: [codex/diverse-agglomerates]
+    paths: ['codes/generation/**', '.github/workflows/generate-agglomerates.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: [self-hosted, linux, x64, lamfoam-local]
+    timeout-minutes: 20
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare isolated Python environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          generation_env="$RUNNER_TEMP/prelim-generation-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          /usr/bin/python3 -m venv "$generation_env"
+          "$generation_env/bin/python" -m pip install -r codes/generation/requirements.txt
+          echo "$generation_env/bin" >> "$GITHUB_PATH"
+      - name: Verify geometry and generate campaign
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/generation/test_generation.py
+          python codes/generation/generate.py --output "$RUNNER_TEMP/prelim-campaign-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          python codes/generation/plot_campaign.py "$RUNNER_TEMP/prelim-campaign-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diverse-agglomerates-${{ github.sha }}
+          path: ${{ runner.temp }}/prelim-campaign-${{ github.run_id }}-${{ github.run_attempt }}/
+          if-no-files-found: error
+          retention-days: 30

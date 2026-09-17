@@ -1,0 +1,16 @@
+{
+  "case": "bcca_N0100_rep05",
+  "method": "bcca",
+  "family": "bcca",
+  "detector_radius_over_r": null,
+  "replicate": 5,
+  "seed": 6749476684613272599,
+  "diameter_um": 1.0,
+  "n": 100,
+  "contacts": 99,
+  "connected": true,
+  "max_overlap_over_radius": 2.6645352591003757e-15,
+  "rg_over_radius": 8.928517863005897,
+  "anisotropy": 0.14824040653252735,
+  "mean_coordination": 1.98
+}
