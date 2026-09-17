@@ -5,16 +5,28 @@ is its compiled review copy. This is the current writing target for the new
 180-case study. The earlier 135-case report in `prelim_hbr/` is historical and
 its training scores must not be transferred to the new dataset.
 
-Compile from the repository root:
+Compile using the separate BibTeX database:
 
 ```bash
-pdflatex -interaction=nonstopmode -halt-on-error -output-directory manuscript manuscript/agglomerate_exposure.tex
-pdflatex -interaction=nonstopmode -halt-on-error -output-directory manuscript manuscript/agglomerate_exposure.tex
+cd manuscript
+pdflatex -interaction=nonstopmode -halt-on-error agglomerate_exposure.tex
+bibtex agglomerate_exposure
+pdflatex -interaction=nonstopmode -halt-on-error agglomerate_exposure.tex
+pdflatex -interaction=nonstopmode -halt-on-error agglomerate_exposure.tex
 ```
+
+Editable TikZ diagrams and snapshot placeholders are in `figures/`.
+Particle/contact, database and software tables are in `tables/`.
+Detailed DEM methods and mechanical parameter tables are in Appendix A.
+All internal manuscript notes and placeholders are red.
+`references_agglomerate_exposure.bib` retains the old reference entries and adds
+Fibonacci sampling and HEALPix sources; only relevant cited entries are printed.
+`briesen_comments.md` maps all 26 original PDF annotations to revisions and
+explicitly outstanding numerical tests.
 
 The abstract and introduction state the research question. Standard methods,
 results, discussion and conclusion sections distinguish completed numerical
-work from planned ML analysis. Bracketed italic text marks incomplete material.
+work from planned ML analysis. Red bracketed italic text marks incomplete material.
 Explain ML terms at first use for readers with an engineering background.
 
 Numerical results currently come from `results/study180/dem_summary.csv`,

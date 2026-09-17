@@ -1,0 +1,14 @@
+\begin{table}[htbp]
+\centering\small
+\caption{Computational tools and planned learning models. ML entries specify the intended implementation; final versions and settings remain pending.}\label{tab:software}
+\begin{tabular}{@{}p{0.23\linewidth}p{0.25\linewidth}p{0.43\linewidth}@{}}\toprule
+Task / model & Python library / engine & Function and details to report\\\midrule
+Geometry and exposure & NumPy; Python standard library & Arrays, ray intersection tests, CSV/JSON case records.\\
+Bonded DEM & LAMMPS; MPICH runtime & Particle translation, rotation, bonds and contacts.\\
+Linear regression & scikit-learn (planned) & Weighted sum of six descriptors; report scaling and intercept.\\
+Random forest & scikit-learn (planned) & Nonlinear ensemble of trees; report tree count, depth and leaf settings.\\
+Six-descriptor ANN & PyTorch (planned) & Fully connected nonlinear model; report layer widths, activations, regularization and optimizer.\\
+GNN & PyTorch and PyTorch Geometric (planned) & Particle-neighbour information exchange, pooling, learned vector and prediction head; verify six layers and 64 internal features.\\
+Analysis and plots & pandas, SciPy, Matplotlib (planned) & Tabulation, statistics, prediction plots and learning curves.\\\bottomrule
+\end{tabular}
+\end{table}

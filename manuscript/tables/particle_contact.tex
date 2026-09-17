@@ -1,0 +1,35 @@
+\begin{table}[htbp]
+\centering\small
+\caption{Particle properties and numerical settings. All particles are identical spheres; mechanical parameters are illustrative. Velocity scales precede momentum removal.}\label{tab:particles}
+\begin{tabular}{@{}p{0.57\linewidth}p{0.35\linewidth}@{}}\toprule
+Quantity & Value\\\midrule
+Diameter; density & $1\,\mu\mathrm{m}$; $1050\,\mathrm{kg\,m^{-3}}$\\
+Mass $m=\rho\pi d^3/6$ & $5.50\times10^{-16}\,\mathrm{kg}$\\
+Moment of inertia $I=md^2/10$ & $5.50\times10^{-29}\,\mathrm{kg\,m^2}$\\
+Initial translational velocity scale & $10^{-3}\,\mathrm{m\,s^{-1}}$ per component\\
+Initial angular velocity scale & $1000\,\mathrm{rad\,s^{-1}}$ per component\\
+Translational numerical drag & $10^{-8}\,\mathrm{kg\,s^{-1}}$\\
+Rotational numerical drag & $10^{-22}\,\mathrm{kg\,m^2\,s^{-1}}$\\
+Time step; duration & $10^{-10}\,\mathrm{s}$; $2\,\mu\mathrm{s}$\\
+Stored snapshots per case & $0$, $1$, $2\,\mu\mathrm{s}$\\\bottomrule
+\end{tabular}
+\end{table}
+\begin{table}[htbp]
+\centering\small
+\caption{Mechanical connections and contact properties. Permanent bonds and unbonded repulsive contacts have distinct roles.}\label{tab:contacts}
+\begin{tabular}{@{}p{0.57\linewidth}p{0.35\linewidth}@{}}\toprule
+Model or property & Setting\\\midrule
+LAMMPS particle / integration styles & \texttt{bpm/sphere}; \texttt{nve/bpm/sphere}\\
+Permanent bond style & \texttt{bpm/rotational}\\
+Bond normal / shear stiffness & $10 / 4\,\mathrm{N\,m^{-1}}$\\
+Bond twist / bend stiffness & $10^{-13} / 10^{-13}\,\mathrm{N\,m}$\\
+Bond normal / shear damping & $10^{-8} / 10^{-8}\,\mathrm{kg\,s^{-1}}$\\
+Bond twist / bend damping & $10^{-22} / 10^{-22}\,\mathrm{kg\,m^2\,s^{-1}}$\\
+Unbonded repulsion & Hertz--Mindlin\\
+Young's modulus; Poisson ratio & $10^9\,\mathrm{Pa}$; $0.3$\\
+Restitution; sliding friction & $0.5$; $0.3$\\
+Bond breaking / later bond formation & Both disabled\\
+van der Waals attraction & Disabled\\
+Stress-free reference & Initial generated configuration\\\bottomrule
+\end{tabular}
+\end{table}
