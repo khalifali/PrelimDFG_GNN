@@ -1,0 +1,20 @@
+{
+  "case": "bpca_N0200_sample01",
+  "method": "bpca",
+  "family": "bpca",
+  "detector_radius_over_r": null,
+  "sample": 1,
+  "replicate": 2,
+  "seed": 6456112570397277303,
+  "diameter_um": 1.0,
+  "compactness_score": 0.6744095742996397,
+  "structural_class": "compact",
+  "class_definition": "within_method_and_N_tertile",
+  "n": 200,
+  "contacts": 199,
+  "connected": true,
+  "max_overlap_over_radius": 2.4424906541753444e-14,
+  "rg_over_radius": 8.671341124566322,
+  "anisotropy": 0.053583338576263295,
+  "mean_coordination": 1.99
+}

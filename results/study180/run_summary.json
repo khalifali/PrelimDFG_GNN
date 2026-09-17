@@ -1,0 +1,8 @@
+{
+  "expected": 180,
+  "completed": 180,
+  "failures": [],
+  "lammps_version": "22 Jul 2025",
+  "bpm_compatibility": "legacy defaults",
+  "all_passed": true
+}

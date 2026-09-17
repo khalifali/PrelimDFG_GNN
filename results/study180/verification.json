@@ -1,0 +1,59 @@
+[
+  {
+    "case": "bpca_N0500_sample01",
+    "max_position_difference_over_diameter": 3.8945011480536e-08,
+    "stationary_control": {
+      "case": "bpca_N0500_sample01",
+      "n": 500,
+      "steps": 20000,
+      "final_time_s": 2e-06,
+      "initial_bonds": 499,
+      "final_bonds": 499,
+      "initial_ke_fJ": 0.0,
+      "final_ke_fJ": 0.0,
+      "ke_ratio": 0.0,
+      "aligned_rms_displacement_over_diameter": 1.2576869598583006e-15,
+      "relative_rg_change": 0.0,
+      "max_overlap_over_diameter": 2.1871393585115584e-14,
+      "passed": true
+    }
+  },
+  {
+    "case": "bcca_N0500_sample01",
+    "max_position_difference_over_diameter": 3.354814800907932e-08,
+    "stationary_control": {
+      "case": "bcca_N0500_sample01",
+      "n": 500,
+      "steps": 20000,
+      "final_time_s": 2e-06,
+      "initial_bonds": 499,
+      "final_bonds": 499,
+      "initial_ke_fJ": 0.0,
+      "final_ke_fJ": 0.0,
+      "ke_ratio": 0.0,
+      "aligned_rms_displacement_over_diameter": 4.778673230661096e-15,
+      "relative_rg_change": 0.0,
+      "max_overlap_over_diameter": 6.328271240363392e-15,
+      "passed": true
+    }
+  },
+  {
+    "case": "local_filling_N0500_sample01",
+    "max_position_difference_over_diameter": 2.867121366185627e-08,
+    "stationary_control": {
+      "case": "local_filling_N0500_sample01",
+      "n": 500,
+      "steps": 20000,
+      "final_time_s": 2e-06,
+      "initial_bonds": 499,
+      "final_bonds": 499,
+      "initial_ke_fJ": 0.0,
+      "final_ke_fJ": 0.0,
+      "ke_ratio": 0.0,
+      "aligned_rms_displacement_over_diameter": 3.0376533998168353e-15,
+      "relative_rg_change": 0.0,
+      "max_overlap_over_diameter": 3.885780586188048e-15,
+      "passed": true
+    }
+  }
+]

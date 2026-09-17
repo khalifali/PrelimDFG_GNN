@@ -1,0 +1,11 @@
+{
+  "case_count": 180,
+  "all_geometry_checks_passed": true,
+  "design": "3 methods x 4 counts x 3 relative structural classes x 5 realizations",
+  "class_caveat": "Tertiles within method and N, not shared absolute compactness thresholds or dense packing.",
+  "diameter_um": 1,
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "generator_sha256": "af1884b417604b28df02ee867aeca6c9de3d92a8d120270ce78988c4031b9a41",
+  "study_builder_sha256": "a06a5f290c22f735028795c06c9f939ea5191e314e8f2c3c2db0b7dafde12e55"
+}

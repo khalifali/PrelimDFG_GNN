@@ -3,7 +3,8 @@
 This project studies how particle arrangement affects aggregate properties and
 whether a graph neural network can represent the relevant structure compactly.
 
-**Current step: generate and check a diverse geometry dataset.**
+**Current step: 180 geometries, bonded LAMMPS verification, and exposure visualization.**
+See [the dataset definition](docs/study180.md) and [the DEM guide](codes/dem/README.md).
 Start with [the generation guide](codes/generation/README.md).
 The committed pilot is in [data/generation/pilot_v1](data/generation/pilot_v1).
 Existing paper results have not been recalculated with these new geometries.
@@ -13,6 +14,8 @@ Existing paper results have not been recalculated with these new geometries.
 | Location | Purpose |
 |---|---|
 | `codes/generation/` | New common generation interface, checks and plots |
+| `codes/dem/` | Bonded LAMMPS preparation, batch execution and assessment |
+| `codes/postprocessing/` | Native dump conversion and exposure-coloured VTP/PVD |
 | `data/generation/` | Generated case coordinates, contacts, metadata and summaries |
 | `codes/fractalagglomerategenration/` | Original generator and dimension-analysis files, retained for provenance |
 | `codes/analysis/` | Uploaded legacy DEM and latent-analysis scripts; incomplete pipeline |
