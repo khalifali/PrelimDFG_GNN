@@ -12,7 +12,7 @@
 \newcommand{\pending}[1]{{\color{red}\textit{[#1]}}}
 \title{Predicting geometric exposure of particle agglomerates:\\learned graph descriptors versus conventional structural parameters}
 \author{Ali Khalifa and Heiko Briesen\\\small Chair of Process Systems Engineering, Technical University of Munich\\\small Freising, Germany}
-\date{Working manuscript}
+\date{}
 \begin{document}
 \maketitle
 \doublespacing
@@ -36,7 +36,7 @@ The central research question is: \emph{Can a small set of learned graph-based s
 
 The present study addresses these questions using a controlled synthetic ensemble and a purely geometric target. The scope is the structural characterization of particle agglomerates for chemical and process engineering. The longer-term motivation is transport from the surrounding fluid to constituent particle surfaces: which surfaces are directly accessible and which are geometrically screened? Transport within the agglomerate, through interparticle fluid spaces and between particle regions, is a separate aspect that also depends on pathway connectivity, local distances and transport conditions. Mean exposure is studied here as a candidate structural descriptor relevant to shielding; it is neither an external mass-transfer coefficient nor a measure of internal diffusivity. Contact edges describe particle relationships, not necessarily fluid transport pathways. Exposure is chosen as a transparent test of structural characterization: a particle can be screened by particles beyond its immediate contacts, so the target tests information about the wider arrangement. Straight-line visibility has a closer conceptual connection to geometrical shadowing than to diffusion. Optical properties of aggregates are a broader research subject~\cite{Sorensen2001}, but the present calculation does not model illumination, scattering, absorption or a photoreaction. It does not calculate concentration fields, diffusion rates or reaction rates. \pending{Introduction to be extended: deepen the literature comparison and refine the gap; retain the general structural-characterization question and the limited geometric scope.}
 
-\section{Materials and methods}
+\section{Methods}
 The workflow in Fig.~\ref{fig:workflow} separates geometric characterization from the auxiliary mechanical check and compares both representations on the same unseen structures.
 \input{figures/workflow.tex}
 \subsection{Study design and agglomerate generation}
@@ -110,7 +110,7 @@ Table~\ref{tab:software} separates verified computational software from the plan
 \input{tables/software.tex}
 \pending{After recovering the training code, record Python and every ML library version, hardware, CPU/GPU use, runtime, random seeds and environment lock file. The existing interpretation script imports PyTorch, PyTorch Geometric and scikit-learn, but this is not evidence that the new 180-case models have been trained.}
 
-\subsection{Training, validation and fair comparison}
+\subsection{Training, validation and model comparison}
 The model learns from a training set. A validation set guides choices such as network size and when to stop training. A test set evaluates prediction on agglomerates that were not used for either purpose. Scaling of inputs is calculated only from training samples and then applied to the withheld samples. The target exposure is never an input.
 
 In five-fold cross-validation, the data are divided into five parts, called folds. Each part is withheld once while the model is developed using the other four. An \emph{out-of-fold prediction} is therefore a prediction for an agglomerate made by a model that did not use that agglomerate for training or model selection. Collecting these predictions produces one independently evaluated prediction per sample. This is more informative about generalization than showing agreement on samples used for fitting.
