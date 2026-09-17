@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python codes/dem/prepare.py "$ML_OUTPUT/geometries" --output "$ML_OUTPUT/bonded"
+          python codes/dem/prepare.py "$ML_OUTPUT/geometries" --output "$ML_OUTPUT/bonded" --steps 160000
           python codes/dem/run.py "$ML_OUTPUT/bonded" --workers 2 2>&1 | tee "$ML_OUTPUT/dem.log"
           python codes/postprocessing/visualize.py "$ML_OUTPUT/bonded" --rays 2048
           python codes/ml/dataset.py "$ML_OUTPUT/bonded" --output "$ML_OUTPUT/final_dataset.json"

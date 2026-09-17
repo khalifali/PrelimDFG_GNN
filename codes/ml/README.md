@@ -21,7 +21,10 @@ historical R². Generation is the tunable particle/cluster mass-radius mechanism
 see codes/generation/FRACTAL_STUDY.md. Three diameters, three prescribed (Df,kf)
 pairs and five independent realizations per size are used.
 
-DEM checks must pass before learning. Three snapshots per case are retained;
+DEM checks must pass before learning. The relaxation interval is 160000 steps
+at 1e-10 s (16 microseconds), with the original force parameters and acceptance
+thresholds. The earlier 2-microsecond interval left excessive residual kinetic
+energy for 1.5 and 2 micrometre particles. Three snapshots per case are retained;
 only the final snapshot enters each primary ML experiment. Fibonacci exposure
 uses 2048 rays. Representative initial-geometry resolution and rotation results
 are in results/fractal180/sampling_checks.csv; these are not a convergence proof
