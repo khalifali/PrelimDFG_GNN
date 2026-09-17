@@ -1,0 +1,16 @@
+<config>
+    <!-- Number of particles in the aggregate -->
+    <N_target>10</N_target>
+
+    <!-- Maximum number of attachment attempts -->
+    <max_try>200</max_try>
+
+    <!-- Radius of each primary particle -->
+    <particle_radius>4.850000000000E-01</particle_radius>
+
+    <!-- Detection radius multiplier -->
+    <r_sigma_mult>10.0</r_sigma_mult>
+
+    <!-- Random seed for reproducible aggregate generation -->
+    <random_seed>1029</random_seed>
+</config>

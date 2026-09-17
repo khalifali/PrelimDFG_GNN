@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <N_target>100</N_target>
+    <particle_radius>4.850000000000E-01</particle_radius>
+    <random_seed>420</random_seed>
+    <kf>1.0</kf>
+    <Df>3.0</Df>
+    <max_try>1000</max_try>
+</config>

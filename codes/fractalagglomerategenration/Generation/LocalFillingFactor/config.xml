@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <N_target>1000</N_target>
+    <particle_radius>4.850000000000E-01</particle_radius>
+    <random_seed>420</random_seed>
+    <r_sigma_mult>10</r_sigma_mult> <!-- Detection radius in *particle_radius -->
+    <max_try>200</max_try>
+</config>
