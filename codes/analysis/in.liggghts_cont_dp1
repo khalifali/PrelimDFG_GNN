@@ -1,0 +1,210 @@
+# ============================================================
+# Single-aggregate DEM relaxation with particle- and contact-level output
+# ============================================================
+
+# -----------------------------
+# 0) Choose LIGGGHTS units  (keep consistent with scal_L/T/M)
+#    Presets (typical):
+#      SI:    scal_L=1      scal_T=1      scal_M=1
+#      CGS:   scal_L=1e2    scal_T=1      scal_M=1e3
+#      MICRO: scal_L=1e6    scal_T=1e6    scal_M=1e15
+# -----------------------------
+variable units string micro
+# variable units string si
+# variable units string cgs
+units ${units}
+
+# -----------------------------
+# 1) Base scaling factors (SI -> run units) — set ONLY these three
+# -----------------------------
+variable scal_L equal 1.0e6     # m -> length units (µm if MICRO)
+variable scal_T equal 1.0e6     # s -> time   units (µs if MICRO)
+variable scal_M equal 1.0e15    # kg-> mass   units (pg if MICRO)
+
+# -----------------------------
+# 2) Derived scaling (leave as-is)
+# -----------------------------
+variable scal_L2 equal ${scal_L}*${scal_L}
+variable scal_L3 equal ${scal_L2}*${scal_L}
+variable scal_T2 equal ${scal_T}*${scal_T}
+
+variable scal_U   equal ${scal_L}/${scal_T}            # velocity L/T
+variable scal_A   equal ${scal_L}/${scal_T2}           # acceleration L/T^2
+variable scal_F   equal ${scal_M}*${scal_L}/${scal_T2} # force M L / T^2
+variable scal_E   equal ${scal_M}*${scal_L2}/${scal_T2}# energy M L^2 / T^2
+variable scal_P   equal ${scal_M}/(${scal_L}*${scal_T2}) # pressure M/(L T^2)
+variable scal_Rho equal ${scal_M}/${scal_L3}           # density M/L^3
+variable scal_Vol equal ${scal_L3}                     # volume L^3
+variable scal_Omg equal 1.0/${scal_T}                  # angular vel 1/T
+
+# ============================================================
+# 3) Master physics (DEFINE ONCE in SI)
+# ============================================================
+# Geometry / particles
+variable diam_SI       equal 1e-06      # [m] mean primary diameter (used for metrics)
+variable rho_SI        equal 1050.0        # [kg/m^3] material density
+
+# Materials
+variable E_SI          equal 1e9        # [Pa] Young's modulus
+variable nu_SI         equal 0.45          # [-]  Poisson ratio
+variable eRest_SI      equal 0.2          # [-]  coeff. of restitution
+variable mu_SI         equal 0.3          # [-]  sliding friction
+variable muroll_SI     equal 0.01         # [-]  rolling friction
+variable delta0_SI     equal 4.0e-10       # [m]  min separation distance (VDW cutoff)
+variable Ham_SI        equal 3.028e-20     # [J]  Hamaker constant
+
+# Time control (stable dt in SI)
+variable dt_SI         equal 5.0e-11       # [s] base timestep
+
+# Optional travel length to estimate steps (kept from your logic)
+variable Ltravel_SI    equal 4.0e-03       # [m] path length budget for step estimate
+
+# Constants
+variable pi            equal 3.141592653589793
+
+# ============================================================
+# 4) Convert to run units (via scaling)
+# ============================================================
+# Basic lengths
+variable diam          equal ${diam_SI}*${scal_L}
+variable r_part        equal 0.5*${diam}
+variable deltacoord    equal ${diam}*1.005
+variable deltacont     equal ${diam}*1.05
+variable neigh         equal ${diam}*0.2
+
+# Material (converted)
+variable youngmodp     equal ${E_SI}*${scal_P}
+variable poissrp       equal ${nu_SI}
+variable erestp        equal ${eRest_SI}
+variable cfricp        equal ${mu_SI}
+variable crolfricp     equal ${muroll_SI}
+variable delta0p       equal ${delta0_SI}*${scal_L}
+variable hamakercp     equal ${Ham_SI}*${scal_E}
+
+# Density (if you want to enforce it via 'set density', otherwise data file may already carry it)
+variable pdens         equal ${rho_SI}*${scal_Rho}
+
+# Time
+variable DT            equal ${dt_SI}*${scal_T}
+
+# Number of relaxation steps
+variable nsteps        equal 100000
+
+# ============================================================
+# 5) Simulation setup
+# ============================================================
+atom_style              granular
+atom_modify             map array
+hard_particles          yes                            # needed for large E
+boundary                p p p
+newton                  off
+processors              * * *
+communicate             single vel yes
+
+# --- Read particles & groups ---
+# (Box comes from the data file)
+# To retain two-type capability, the data-file header must declare
+# "2 atom types", even when all current particles are assigned type 1.
+read_data               particles.sys
+#group                   aggregate type 1 2
+
+# If you need to enforce density from header variables (uncomment):
+# set                     type 1 density ${pdens}
+# set                     type 2 density ${pdens}
+
+# --- Neighbor ---
+neighbor                ${neigh} bin
+neigh_modify            delay 0 contact_distance_factor 1.05
+
+# --- Material properties for contact model ---
+# Two material types are retained.  The current data file may assign every
+# particle to type 1, while future cases can use type 2 without changing the
+# script.  Replace the repeated values below when distinct properties are used.
+fix m1  all property/global youngsModulus              peratomtype ${youngmodp} ${youngmodp}
+fix m2  all property/global poissonsRatio              peratomtype ${poissrp}  ${poissrp}
+fix m3  all property/global coefficientRestitution     peratomtypepair 2 ${erestp} ${erestp} &
+                                                                     ${erestp} ${erestp}
+fix m4  all property/global coefficientFriction        peratomtypepair 2 ${cfricp} ${cfricp} &
+                                                                     ${cfricp} ${cfricp}
+fix m7  all property/global hamakerConstant            peratomtypepair 2 ${hamakercp} ${hamakercp} &
+                                                                     ${hamakercp} ${hamakercp}
+fix m9  all property/global minSepDistance             peratomtypepair 2 ${delta0p} ${delta0p} &
+                                                                     ${delta0p} ${delta0p}
+fix m8  all property/global coefficientRollingFriction peratomtypepair 2 ${crolfricp} ${crolfricp} &
+                                                                     ${crolfricp} ${crolfricp}
+
+# --- Contact model ---
+pair_style  gran model hertz_fvdw tangential history rolling_friction cdt torsionTorque on limitForce on
+pair_coeff  * *
+
+# --- Time integration & stability check ---
+timestep                ${DT}
+fix ts_check all check/timestep/gran 1000 0.12 0.05
+
+# Gravity if needed:
+# fix gravi all gravity 9.81*${scal_A} vector 0.0 0.0 -1.0
+
+# ============================================================
+# 6) Diagnostics & outputs
+# ============================================================
+compute ncoord   all coord/atom ${deltacoord} mix no
+compute nconts   all contact/atom/gran
+compute ntouch   all contact/atom
+compute kinen    all ke/atom
+
+compute totcont  all reduce sum c_nconts
+compute totcoord all reduce sum c_ncoord
+compute totke    all reduce sum c_kinen
+compute tottouch all reduce sum c_ntouch
+
+# Cluster-contact metric (uses deltacont)
+compute     cluscont all cluster/atom ${deltacont}
+
+# Pairwise interaction data.  Each local row corresponds to one interacting
+# particle pair.  The selected output columns are, in this fixed order:
+#   1-2   particle IDs i,j
+#   3     periodic-boundary flag
+#   4-6   total pair force Fx,Fy,Fz
+#   7-9   normal-force components
+#   10-12 tangential-force components
+#   13-15 torque-derived components reported by pair/gran/local
+#   16    geometrical contact area
+#   17    overlap delta = Ri + Rj - |xi-xj|
+compute contactLocal all pair/gran/local pos id force force_normal force_tangential torque contactArea delta
+
+
+# With the fVDW model, this list can also contain attractive near-neighbour
+# interactions inside the force cutoff.  Use column 17: delta > 0 identifies
+# geometrically overlapping/touching sphere pairs; delta <= 0 denotes a gap.
+
+
+# Dumps (ensure directories exist)
+dump        dmp all custom 20000 results/post/post_*.txt id type x y z vx vy vz omegax omegay omegaz radius c_ncoord c_nconts c_ntouch c_cluscont fx fy fz
+dump_modify dmp format "%li %i %.12e %.12e %.12e %.12e %.12e %.12e %.12e  %.12e %.12e %.12e %2.0f %2.0f %2.0f %2.0f %.12e  %.12e %.12e"
+
+# Contact dump, written at the same cadence as the per-particle dump.
+# Keep the two particle IDs in every row; local row indices are not persistent
+# when particles migrate between MPI ranks.
+dump dmpContact all local 20000 results/cont/contact_*.txt c_contactLocal[1]  c_contactLocal[2]  c_contactLocal[3]  c_contactLocal[4]  c_contactLocal[5]  c_contactLocal[6]  c_contactLocal[7]  c_contactLocal[8]  c_contactLocal[9] c_contactLocal[10] c_contactLocal[11] c_contactLocal[12]  c_contactLocal[13] c_contactLocal[14] c_contactLocal[15]  c_contactLocal[16] c_contactLocal[17] c_contactLocal[18] c_contactLocal[19] c_contactLocal[20] c_contactLocal[21] c_contactLocal[22] c_contactLocal[23]
+#
+dump_modify dmpContact format "%.12e %.12e %.12e %.12e %.12e %.12e %.0f %.0f %.0f %.12e %.12e %.12e %.12e %.12e %.12e %.12e %.12e %.12e %.12e %.12e %.12e %.12e %.12e"
+
+
+# Light logging
+variable    N           equal atoms
+variable    vstep       equal step
+variable    vtotcont    equal c_totcont
+variable    vtotcoord   equal c_totcoord
+variable    vtottouch   equal c_tottouch
+variable    vtotke      equal c_totke
+
+fix cont all print 50 "${vstep} ${vtotcont} ${vtotcoord} ${vtottouch} ${vtotke} $N" append results/cont_coord_ke.txt title "#t,cont,coord,touch,kin,N" screen no
+
+# Integrator (after read_data, before dynamics)
+fix integr all nve/sphere
+
+# ============================================================
+# 7) Relax the aggregate
+# ============================================================
+run                 ${nsteps}
+write_restart       results/restart.file*
