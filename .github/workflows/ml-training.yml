@@ -1,0 +1,94 @@
+name: Exposure ML comparison
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'codes/ml/**'
+      - '.github/workflows/ml-training.yml'
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful bonded-campaign run with study180-bonded artifact
+        required: true
+        default: '35279655509'
+        type: string
+      snapshot:
+        description: One snapshot per agglomerate
+        type: choice
+        options: [final, initial]
+        default: final
+      evaluation:
+        description: Grouped folds or extrapolation test
+        type: choice
+        options: [grouped, method, size500]
+        default: grouped
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: exposure-ml-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  train:
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+      SOURCE_RUN_ID: ${{ inputs.source_run_id || '35279655509' }}
+      ML_SNAPSHOT: ${{ inputs.snapshot || 'final' }}
+      ML_EVALUATION: ${{ inputs.evaluation || 'grouped' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Create isolated CPU training environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          ML_ENV="$RUNNER_TEMP/exposure-ml-env-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          python3 -m venv "$ML_ENV"
+          "$ML_ENV/bin/python" -m pip install --upgrade pip
+          "$ML_ENV/bin/python" -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          "$ML_ENV/bin/python" -m pip install -r codes/ml/requirements.txt
+          echo "$ML_ENV/bin" >> "$GITHUB_PATH"
+          echo "ML_OUTPUT=$RUNNER_TEMP/exposure-ml-output-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+      - name: Download completed bonded campaign
+        uses: actions/download-artifact@v4
+        with:
+          pattern: study180-bonded-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/exposure-ml-input-${{ github.run_id }}-${{ github.run_attempt }}
+          github-token: ${{ github.token }}
+          run-id: ${{ env.SOURCE_RUN_ID }}
+      - name: Verify architecture, feature construction and data separation
+        run: python codes/ml/test_pipeline.py
+      - name: Train GNN, ANN and traditional-descriptor baselines
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$ML_OUTPUT"
+          python -m pip freeze > "$ML_OUTPUT/environment.txt"
+          echo "$SOURCE_RUN_ID" > "$ML_OUTPUT/source_run_id.txt"
+          python codes/ml/run_campaign.py \
+            "$RUNNER_TEMP/exposure-ml-input-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" \
+            --output "$ML_OUTPUT" --snapshot "$ML_SNAPSHOT" --mode "$ML_EVALUATION" \
+            --epochs 300 --patience 50 --seeds 7 17 27 --q 1 2 3 4 --threads 2 \
+            2>&1 | tee "$ML_OUTPUT/training.log"
+      - name: Publish comparison summary
+        if: success()
+        shell: bash
+        run: cat "$ML_OUTPUT/training/results.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve datasets, predictions, models and partial progress
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exposure-ml-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.ML_OUTPUT }}
+          if-no-files-found: warn
+          retention-days: 30

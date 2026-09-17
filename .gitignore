@@ -40,3 +40,7 @@ data/generation/**/*.png
 data/dem/
 codes/dem/__pycache__/
 codes/postprocessing/__pycache__/
+
+# ML virtual environment and reproducible training outputs
+.venv-ml/
+data/ml/
