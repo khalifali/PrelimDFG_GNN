@@ -44,3 +44,7 @@ All entries from the previous bibliography are retained in `references_agglomera
 - External fluid-to-particle exchange and internal transport through interparticle spaces are distinguished.
 - Compact main-text DEM subsection; full properties and contact details in Appendix A.
 - Database design, grouping rule (rank tertiles, not k-means), and ML software/model tables supplied.
+
+## Transport motivation revision
+
+The introduction now cites Bullard et al. (2021) for area-dependent dissolution and Liu and Smallwood (2008) for aggregate shielding and reduced gas-accessible area in conduction heat transfer. These motivate accessibility as a structural quantity, but do not establish equivalence of the present surface-normal ray measure with effective mass/heat-transfer area. That physical validation remains outstanding. The introduction compares linear regression and nonlinear ML (ANN and random forest) without centring the research question on ANN alone. Manuscript prose uses double spacing.
