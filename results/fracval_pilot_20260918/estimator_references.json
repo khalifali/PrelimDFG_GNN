@@ -1,0 +1,26 @@
+[
+  {
+    "box_dimension": 2.508788126909956,
+    "box_grid_sd": 0.0690602264330564,
+    "box_min_fit_r2": 0.9848894431240036,
+    "box_mean_slope_stderr": 0.0522058598300866,
+    "box_scale_span_decades": 0.3979400086720376,
+    "box_window_sensitivity": 0.20314708502456202,
+    "box_quality": "scale_span_below_half_decade;window_sensitivity_above_0.20",
+    "reference": "simple_cubic",
+    "particles": 1000,
+    "side_particles": 10
+  },
+  {
+    "box_dimension": 2.5481226381172597,
+    "box_grid_sd": 0.022294751902122104,
+    "box_min_fit_r2": 0.9980911849991069,
+    "box_mean_slope_stderr": 0.04030249719752509,
+    "box_scale_span_decades": 0.8418428005218067,
+    "box_window_sensitivity": 0.0758763578781596,
+    "box_quality": "ok",
+    "reference": "simple_cubic",
+    "particles": 8000,
+    "side_particles": 20
+  }
+]
