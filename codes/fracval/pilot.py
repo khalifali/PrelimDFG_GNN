@@ -1,6 +1,6 @@
 """Bounded FracVAL geometry calibration; no DEM or ML, no estimator tuning."""
 import argparse, concurrent.futures, csv, hashlib, io, json, re, shutil
-import subprocess, sys, tarfile, urllib.request
+import subprocess, sys, tarfile, urllib.request, os
 from pathlib import Path
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
@@ -30,7 +30,7 @@ def attempt(task,src,out,seconds):
     try:
         cmd=['gfortran','-O2','-ffree-line-length-none','-fdefault-real-8','-fdefault-double-8']+[x+'.f90' for x in ORDER]+['-o','fracval']
         with (work/'compile.log').open('w') as f:subprocess.run(cmd,cwd=work,stdout=f,stderr=subprocess.STDOUT,check=True,timeout=90)
-        with (work/'generation.log').open('w') as f:subprocess.run(['./fracval'],cwd=work,stdout=f,stderr=subprocess.STDOUT,check=True,timeout=seconds)
+        with (work/'generation.log').open('w') as f:subprocess.run(['./fracval'],cwd=work,stdout=f,stderr=subprocess.STDOUT,check=True,timeout=seconds,env={**os.environ,'GFORTRAN_UNBUFFERED_ALL':'y'})
         data=np.loadtxt(next((work/'RESULTS').glob('*.dat')))
         assert data.shape==(1000,4) and np.isfinite(data).all()
         xyz=data[:,:3];r=data[:,3];d=2*r[0]
@@ -61,7 +61,7 @@ def attempt(task,src,out,seconds):
     return row
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--seconds',type=int,default=120);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--seconds',type=int,default=120);p.add_argument('--tasks',type=Path);a=p.parse_args()
     a.output.mkdir(parents=True,exist_ok=True)
     src=Path(__file__).resolve().parent/'vendor'
     manifest=json.loads((src/'SHA256.json').read_text())
@@ -70,6 +70,7 @@ def main():
     # Calibration candidates are disclosed in full; targets refer to measured Dbox.
     # A match requires absolute error <=0.05; quality flags are reported separately.
     tasks=[(1.5,1.5,1.5,918150),(2.,2.,1.2,918200),(2.9,2.9,.5,918290)]
+    if a.tasks:tasks=json.loads(a.tasks.read_text())
     rows=[]
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as pool:
         for row in pool.map(lambda t:attempt(t,src,a.output,a.seconds),tasks):rows.append(row)
