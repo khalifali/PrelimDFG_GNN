@@ -116,7 +116,7 @@ def audit_report(output,audits,summary):
     (output/'audit.md').write_text('\n'.join(lines)+'\n')
     fig,axes=plt.subplots(2,2,figsize=(10,8),layout='constrained')
     colors=np.log10([r['n'] for r in final])
-    axes[0,0].scatter([r['requested_df'] for r in final],[r['box_dimension'] for r in final],c=colors,s=14)
+    axes[0,0].scatter([float(r['requested_df']) if r['requested_df'] not in ('',None) else np.nan for r in final],[r['box_dimension'] for r in final],c=colors,s=14)
     axes[0,0].set(xlabel='Requested mass–radius exponent',ylabel='Measured box-counting exponent')
     sc=axes[0,1].scatter([r['hull_porosity'] for r in final],[r['box_dimension'] for r in final],c=colors,s=14)
     axes[0,1].set(xlabel='Particle-body hull porosity',ylabel='Measured box-counting exponent')
