@@ -1,5 +1,8 @@
 name: Matched vdW relaxation and ML
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/vdw-ml-comparison.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,7 +22,7 @@ jobs:
       OMP_NUM_THREADS: '2'
       OPENBLAS_NUM_THREADS: '1'
       MPLBACKEND: Agg
-      VDW_OUTPUT: ${{ runner.temp }}/vdw-results-${{ github.run_id }}-${{ github.run_attempt }}
+      VDW_OUTPUT: ${{ github.workspace }}/vdw-results-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
         with:
