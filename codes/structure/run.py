@@ -72,7 +72,7 @@ def collect(a):
     seen={}
     for g in records:
         for kind in ('independence_group','geometry_fingerprint'):
-            k=(kind,g[k])
+            k=(kind,g[kind])
             if k in seen:parents[find(g['case'])]=find(seen[k])
             else:seen[k]=g['case']
     for g in records:g['independence_group']=find(g['case'])
