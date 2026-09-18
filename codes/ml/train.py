@@ -35,7 +35,30 @@ def write_csv(path, rows):
         writer.writerows(rows)
 
 
+def v9_partitions(records):
+    # Use the uploaded source itself, avoiding a second implementation of its
+    # diameter/N/Df grouping and size-balanced assignment. Hold split seed fixed
+    # across neural seeds so variability reflects training, not changed tests.
+    from types import SimpleNamespace
+    from reference_v9.train_gnn_pure_graph_latent_v9 import make_grouped_folds
+    data = [SimpleNamespace(case=g['case']) for g in records]
+    folds = make_grouped_folds(data, 5, 7)
+    order = np.arange(len(records))
+    result = []
+    for fold, test in enumerate(folds):
+        train = np.setdiff1d(order, test)
+        shuffled = np.random.default_rng(7 + fold).permutation(train)
+        nval = max(1, int(round(.15 * len(shuffled))))
+        val, fit = shuffled[:nval], shuffled[nval:]
+        assert not set(train) & set(test)
+        assert not set(fit) & set(val)
+        result.append((train, test, fit, val))
+    return result
+
+
 def splits(records, mode='grouped'):
+    if mode == 'v9':
+        return v9_partitions(records)
     groups = np.array([g['group'] for g in records])
     all_ids = np.arange(len(records))
     if mode == 'grouped':
@@ -151,6 +174,11 @@ def run(a):
     records = read_dataset(a.dataset)
     if a.particle_counts:
         records = [g for g in records if g['n'] in a.particle_counts]
+    if a.mode == 'v9':
+        from reference_v9.train_gnn_pure_graph_latent_v9 import realization_group
+        records = sorted(records, key=lambda g: g['case'])
+        for g in records:
+            g['group'] = realization_group(g['case'])
     if not records or len({g['group'] for g in records}) < 5:
         raise ValueError('At least five independent groups are required')
     out = a.output
@@ -246,20 +274,25 @@ def run(a):
                     val_prediction,_ = predict(model,validation,scale,kind)
                     val_r2 = r2_score(y(validation),val_prediction)
                     write_csv(folder/f'{name}_inner_curve.csv',history)
-                    model,scale,_,history = train_neural(outer,None,kind,q,seed+1000*q+fold,a.epochs,a.patience,fixed_epochs=epochs)
-                    write_csv(folder/f'{name}_refit_curve.csv',history)
-                    save_checkpoint(folder/f'{name}.pt',model,scale,kind,q,epochs,outer)
+                    validation_scores = scores(y(validation), val_prediction)
+                    fitted_cases = inner
+                    if a.mode != 'v9':
+                        model,scale,_,history = train_neural(outer,None,kind,q,seed+1000*q+fold,a.epochs,a.patience,fixed_epochs=epochs)
+                        write_csv(folder/f'{name}_refit_curve.csv',history)
+                        fitted_cases = outer
+                    # v9 evaluates the restored best inner-fit checkpoint directly.
+                    save_checkpoint(folder/f'{name}.pt',model,scale,kind,q,epochs,fitted_cases)
                     pred,latent = predict(model,testing,scale,kind)
                     # Latents are fold-specific: never pool axes across separately trained networks.
                     latent_rows = [dict(case=g['case'],**{f'q{k+1}':float(v) for k,v in enumerate(latent[j])}) for j,g in enumerate(testing)]
                     write_csv(folder/f'{name}_test_latent.csv',latent_rows)
                     if kind == 'gnn':
                         from interpret import latent_analysis
-                        correlations,reconstruction=latent_analysis(model,scale,kind,outer,testing,seed,a.trees,a.threads)
+                        correlations,reconstruction=latent_analysis(model,scale,kind,fitted_cases,testing,seed,a.trees,a.threads)
                         write_csv(folder/f'{name}_correlations.csv',correlations)
                         write_csv(folder/f'{name}_descriptor_reconstruction.csv',reconstruction)
                     neural_results[(kind,q)] = (val_r2,pred)
-                    selections.append(dict(fold=fold,seed=seed,model=name,selection=json.dumps(dict(best_epoch=epochs,inner_r2=float(val_r2),parameters=sum(p.numel() for p in model.parameters())))))
+                    selections.append(dict(fold=fold,seed=seed,model=name,selection=json.dumps(dict(best_epoch=epochs,inner_r2=float(val_r2),inner_rmse=validation_scores['rmse'],inner_mae=validation_scores['mae'],fit_cases=len(inner),validation_cases=len(validation),parameters=sum(p.numel() for p in model.parameters())))))
                     record(name,pred)
                 if kind in ('gnn','ann'):
                     best = max(neural_results[(kind,q)][0] for q in a.q)
@@ -277,6 +310,8 @@ def run(a):
     (out/'provenance.json').write_text(json.dumps(provenance,indent=2))
     from report import report
     report(out)
+    from latent_selection_report import selection_report
+    selection_report(out)
 
 if __name__ == '__main__':
     p=argparse.ArgumentParser(description=__doc__)
@@ -288,7 +323,7 @@ if __name__ == '__main__':
     p.add_argument('--patience',type=int,default=50)
     p.add_argument('--trees',type=int,default=500)
     p.add_argument('--threads',type=int,default=2)
-    p.add_argument('--mode',choices=['grouped','method','size500'],default='grouped')
+    p.add_argument('--mode',choices=['grouped','method','size500','v9'],default='grouped')
     p.add_argument('--verify-splits',type=Path)
     p.add_argument('--particle-counts',nargs='+',type=int)
     p.add_argument('--resume',action='store_true')

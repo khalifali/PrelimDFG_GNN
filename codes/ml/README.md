@@ -1,3 +1,18 @@
+## Active follow-up: v9 evaluation-protocol comparison
+
+Use Actions → V9 protocol ML comparison. This reuses the verified 179-case
+exposure dataset from run 35290323430; no geometry/DEM/target changes. It trains
+core134_v9 and extended179_v9 with --mode v9, on self-hosted hardware.
+
+V9 outer groups include diameter/N/Df (not all diameters combined). Inner
+validation is the original random 15% split, and neural evaluation uses the
+saved best checkpoint without refitting. Fold seed is frozen at 7 across all
+three training seeds. Internal latent-size selection remains independent of
+outer test results. See manuscript/ml_evaluation_explanation.md for limitations
+and the plain-language explanation. The previous stricter grouped analysis is
+preserved as a separate result, not overwritten. Source artifact retention is
+30 days; new comparison artifacts have 90-day retention.
+
 > Active run: reuse the completed 16-us campaign from Actions run 35288931479.
 > One user-approved exclusion: fractal_dp2_N0100_Df2.6_kf0.8_rep04, residual KE
 > ratio 0.00104786 above 0.001. There are 134 core + 45 extension = 179 cases.

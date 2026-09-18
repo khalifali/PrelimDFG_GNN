@@ -1,0 +1,84 @@
+name: V9 protocol ML comparison
+on:
+  push:
+    branches: [main]
+    paths: ['codes/ml/**', '.github/workflows/ml-v9-comparison.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: exposure-v9-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  train:
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Create isolated ML environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          ML_ENV="$RUNNER_TEMP/v9-env-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          python3 -m venv "$ML_ENV"
+          "$ML_ENV/bin/python" -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          "$ML_ENV/bin/python" -m pip install -r codes/ml/requirements.txt
+          echo "$ML_ENV/bin" >> "$GITHUB_PATH"
+          echo "ML_OUTPUT=$RUNNER_TEMP/v9-results-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+      - name: Download verified dataset without regenerating DEM or exposure
+        uses: actions/download-artifact@v4
+        with:
+          name: fractal-exposure-ml-35290323430-1
+          path: ${{ runner.temp }}/v9-source-${{ github.run_id }}
+          github-token: ${{ github.token }}
+          run-id: 35290323430
+      - name: Verify reference partitions and models
+        run: |
+          python codes/ml/test_v9_splits.py
+          python codes/ml/test_pipeline.py
+      - name: Record inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$ML_OUTPUT"
+          cp "$RUNNER_TEMP/v9-source-$GITHUB_RUN_ID/final_dataset.json" "$ML_OUTPUT/"
+          cp "$RUNNER_TEMP/v9-source-$GITHUB_RUN_ID/selection_report.json" "$ML_OUTPUT/"
+          python -m pip freeze > "$ML_OUTPUT/environment.txt"
+          echo 35290323430 > "$ML_OUTPUT/source_run_id.txt"
+      - name: Train 134-case core with v9 partitions and checkpoint evaluation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/ml/train.py "$ML_OUTPUT/final_dataset.json" --particle-counts 50 100 200 --mode v9 --output "$ML_OUTPUT/core134_v9" --epochs 300 --patience 50 --seeds 7 17 27 --q 1 2 3 4 --threads 2 2>&1 | tee "$ML_OUTPUT/core134.log"
+          cat "$ML_OUTPUT/core134_v9/results.md" "$ML_OUTPUT/core134_v9/latent_selection.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve completed core results
+        uses: actions/upload-artifact@v4
+        with:
+          name: v9-core134-${{ github.run_id }}
+          path: ${{ env.ML_OUTPUT }}/core134_v9/
+          retention-days: 90
+      - name: Train extended 179-case comparison with the same protocol
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/ml/train.py "$ML_OUTPUT/final_dataset.json" --mode v9 --output "$ML_OUTPUT/extended179_v9" --epochs 300 --patience 50 --seeds 7 17 27 --q 1 2 3 4 --threads 2 2>&1 | tee "$ML_OUTPUT/extended179.log"
+          cat "$ML_OUTPUT/extended179_v9/results.md" "$ML_OUTPUT/extended179_v9/latent_selection.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve comparison and partial progress
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v9-comparison-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.ML_OUTPUT }}/
+          if-no-files-found: warn
+          retention-days: 90

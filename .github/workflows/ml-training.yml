@@ -1,8 +1,5 @@
 name: Exposure ML comparison
 on:
-  push:
-    branches: [main]
-    paths: ['codes/ml/**', '.github/workflows/ml-training.yml']
   workflow_dispatch:
 permissions:
   contents: read
