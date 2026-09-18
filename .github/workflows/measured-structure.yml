@@ -1,0 +1,82 @@
+name: Measured structure and geometry-based validation
+on:
+  push:
+    branches: [main]
+    paths: ['codes/structure/**', '.github/workflows/measured-structure.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: measured-structure-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Isolated descriptor and ML environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/measured-structure-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$ROOT"
+          echo "STRUCTURE_ROOT=$ROOT" >> "$GITHUB_ENV"
+          ENV_DIR="$RUNNER_TEMP/structure-env-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          python3 -m venv "$ENV_DIR"
+          "$ENV_DIR/bin/python" -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          "$ENV_DIR/bin/python" -m pip install -r codes/ml/requirements.txt
+          echo "$ENV_DIR/bin" >> "$GITHUB_PATH"
+          "$ENV_DIR/bin/python" -m pip freeze > "$ROOT/environment.txt"
+      - name: Original 179 BPM cases
+        uses: actions/download-artifact@v4
+        with:
+          name: fractal-exposure-ml-35290323430-1
+          path: ${{ runner.temp }}/structure-original-${{ github.run_id }}
+          github-token: ${{ github.token }}
+          run-id: 35290323430
+      - name: Previously evaluated 180 BPM cases
+        uses: actions/download-artifact@v4
+        with:
+          name: independent-bpm-scores-35329886166-1
+          path: ${{ runner.temp }}/structure-independent-${{ github.run_id }}
+          github-token: ${{ github.token }}
+          run-id: 35329886166
+      - name: Verify descriptor formulas and group isolation
+        run: python codes/structure/test_structure.py
+      - name: Measure initial and final structures and audit reliability
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/structure/run.py collect --original "$RUNNER_TEMP/structure-original-$GITHUB_RUN_ID" --independent "$RUNNER_TEMP/structure-independent-$GITHUB_RUN_ID" --output "$STRUCTURE_ROOT/results" 2>&1 | tee "$STRUCTURE_ROOT/audit.log"
+          cat "$STRUCTURE_ROOT/results/audit.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Publish measured descriptors before model training
+        uses: actions/upload-artifact@v4
+        with:
+          name: measured-descriptor-audit-${{ github.run_id }}
+          path: ${{ env.STRUCTURE_ROOT }}/results/
+          retention-days: 90
+      - name: Compare six and eight descriptor baselines and GNN on identical geometry-based splits
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/structure/run.py train --output "$STRUCTURE_ROOT/results" 2>&1 | tee "$STRUCTURE_ROOT/training.log"
+          cat "$STRUCTURE_ROOT/results/results.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve audit and model comparisons
+        if: ${{ always() && env.STRUCTURE_ROOT != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: measured-structure-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.STRUCTURE_ROOT }}/
+          retention-days: 90
