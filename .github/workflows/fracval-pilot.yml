@@ -35,7 +35,7 @@ jobs:
           echo "$ROOT/venv/bin" >> "$GITHUB_PATH"
       - name: Generate and measure three pilot structures
         run: |
-          python codes/fracval/pilot.py --output "$FRACVAL_ROOT/results" --tasks codes/fracval/calibration.json --seconds 120
+          python codes/fracval/pilot.py --output "$FRACVAL_ROOT/results" --tasks codes/fracval/calibration.json --seconds 240
           cat "$FRACVAL_ROOT/results/report.md" >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
