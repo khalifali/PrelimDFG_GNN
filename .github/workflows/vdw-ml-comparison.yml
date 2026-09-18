@@ -1,8 +1,5 @@
 name: Matched vdW relaxation and ML
 on:
-  push:
-    branches: [main]
-    paths: ['codes/dem/comparison/**', '.github/workflows/vdw-ml-comparison.yml']
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,6 +19,7 @@ jobs:
       OMP_NUM_THREADS: '2'
       OPENBLAS_NUM_THREADS: '1'
       MPLBACKEND: Agg
+      VDW_OUTPUT: ${{ runner.temp }}/vdw-results-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,6 +27,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: khalifali/LAMFOAM
+          token: ${{ secrets.LAMFOAM_READ_TOKEN }}
           ref: f61d4f06d0a5f57e7e8f962420cb86a42bdf71ba
           path: vendor-lamfoam
           persist-credentials: false
@@ -99,7 +98,7 @@ jobs:
           python codes/dem/comparison/compare_reports.py "$RUNNER_TEMP/bpm-v9-$GITHUB_RUN_ID" "$VDW_OUTPUT"
           cat "$VDW_OUTPUT/bpm_vdw_comparison.md" >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve results and failure diagnostics
-        if: always()
+        if: ${{ always() && env.VDW_OUTPUT != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: vdw-ml-${{ github.run_id }}-${{ github.run_attempt }}
