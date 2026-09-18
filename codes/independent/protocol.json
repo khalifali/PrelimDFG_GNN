@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "development_run": 35290323430,
+  "selection_run": 35307361168,
+  "development_cases": 179,
+  "master_seed": 9182026,
+  "seed_namespace": "independent-bpm-v1",
+  "diameters_um": [1.0, 1.5, 2.0],
+  "replicates": 5,
+  "sets": {
+    "interpolation": {"counts": [75, 150, 350], "morphologies": [[2.0, 1.2], [2.4, 0.95]]},
+    "extrapolation": {"counts": [750, 1000], "morphologies": [[1.8, 1.3], [2.2, 1.1], [2.6, 0.8]]}
+  },
+  "training_seeds": [7, 17, 27],
+  "latent_dimensions": [1, 2, 3, 4],
+  "selection_rule": "smallest q within 0.02 of highest mean development inner-validation R2",
+  "duration_rule": "rounded median best epoch over development inner fits for each model",
+  "steps": 160000,
+  "dt_s": 1e-10,
+  "rays": 2048,
+  "contact_tolerance_over_d": 1e-6,
+  "failure_policy": "retain all diagnostics and stop before test scoring if any geometry or DEM case fails; no automatic exclusions or replacement seeds",
+  "scope": "same-generator parameter interpolation and size-only extrapolation; no claim of unseen-generator or experimental generalization"
+}

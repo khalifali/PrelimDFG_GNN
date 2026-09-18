@@ -1,0 +1,113 @@
+name: Independent BPM interpolation and extrapolation
+on:
+  push:
+    branches: [main]
+    paths: ['codes/independent/**', '.github/workflows/independent-bpm.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: independent-bpm-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  evaluate:
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Initialize isolated output and environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/independent-bpm-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          echo "INDEPENDENT_OUTPUT=$OUT" >> "$GITHUB_ENV"
+          mkdir -p "$OUT"
+          ENV_DIR="$RUNNER_TEMP/independent-env-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          python3 -m venv "$ENV_DIR"
+          "$ENV_DIR/bin/python" -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          "$ENV_DIR/bin/python" -m pip install -r codes/ml/requirements.txt lammps==2025.7.22.4.0 mpich==5.0.1.post1
+          echo "$ENV_DIR/bin" >> "$GITHUB_PATH"
+          "$ENV_DIR/bin/python" -m pip freeze > "$OUT/environment.txt"
+      - name: Download existing development geometries and targets
+        uses: actions/download-artifact@v4
+        with:
+          name: fractal-exposure-ml-35290323430-1
+          path: ${{ runner.temp }}/independent-development-${{ github.run_id }}
+          github-token: ${{ github.token }}
+          run-id: 35290323430
+      - name: Download development-only model-selection records
+        uses: actions/download-artifact@v4
+        with:
+          name: v9-comparison-35307361168-1
+          path: ${{ runner.temp }}/independent-selection-${{ github.run_id }}
+          github-token: ${{ github.token }}
+          run-id: 35307361168
+      - name: Verify isolation and freeze the independent experiment
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/independent/test_protocol.py
+          python codes/independent/campaign.py freeze --dataset "$RUNNER_TEMP/independent-development-$GITHUB_RUN_ID/final_dataset.json" --selections "$RUNNER_TEMP/independent-selection-$GITHUB_RUN_ID/extended179_v9/selections.csv" --output "$INDEPENDENT_OUTPUT/experiment"
+      - name: Publish protocol before training and test generation
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-protocol-${{ github.run_id }}
+          path: |
+            ${{ env.INDEPENDENT_OUTPUT }}/experiment/freeze.json
+            ${{ env.INDEPENDENT_OUTPUT }}/experiment/planned_cases.csv
+          retention-days: 90
+      - name: Fit final models on all 179 development cases
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/independent/campaign.py fit --dataset "$RUNNER_TEMP/independent-development-$GITHUB_RUN_ID/final_dataset.json" --output "$INDEPENDENT_OUTPUT/experiment" 2>&1 | tee "$INDEPENDENT_OUTPUT/training.log"
+      - name: Preserve frozen models before generating holdouts
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-models-${{ github.run_id }}
+          path: |
+            ${{ env.INDEPENDENT_OUTPUT }}/experiment/models/
+            ${{ env.INDEPENDENT_OUTPUT }}/experiment/models_frozen.json
+          retention-days: 90
+      - name: Generate 90 interpolation and 90 size-extrapolation geometries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/independent/campaign.py generate --source "$RUNNER_TEMP/independent-development-$GITHUB_RUN_ID/bonded" --output "$INDEPENDENT_OUTPUT/experiment" 2>&1 | tee "$INDEPENDENT_OUTPUT/generation.log"
+      - name: Prepare and run BPM only with unchanged mechanical checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/dem/prepare.py "$INDEPENDENT_OUTPUT/experiment/geometries" --output "$INDEPENDENT_OUTPUT/experiment/bonded" --steps 160000 --dt 1e-10
+          python codes/dem/run.py "$INDEPENDENT_OUTPUT/experiment/bonded" --workers 2 2>&1 | tee "$INDEPENDENT_OUTPUT/dem.log"
+      - name: Calculate exposure and save three colored particle snapshots per case
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/postprocessing/visualize.py "$INDEPENDENT_OUTPUT/experiment/bonded" --rays 2048
+          python codes/ml/dataset.py "$INDEPENDENT_OUTPUT/experiment/bonded" --expected-cases 180 --output "$INDEPENDENT_OUTPUT/experiment/test_dataset.json"
+      - name: Evaluate untouched interpolation and extrapolation sets separately
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/independent/campaign.py evaluate --dataset "$INDEPENDENT_OUTPUT/experiment/test_dataset.json" --output "$INDEPENDENT_OUTPUT/experiment"
+          cat "$INDEPENDENT_OUTPUT/experiment/results.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve results and all failure diagnostics
+        if: ${{ always() && env.INDEPENDENT_OUTPUT != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-bpm-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.INDEPENDENT_OUTPUT }}/
+          if-no-files-found: warn
+          retention-days: 90
