@@ -1,0 +1,66 @@
+name: Evaluate frozen independent BPM tests
+on:
+  push:
+    branches: [main]
+    paths: ['codes/fixed_time_evaluation/**', '.github/workflows/evaluate-independent-bpm.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: evaluate-independent-bpm
+  cancel-in-progress: false
+jobs:
+  scores:
+    runs-on: self-hosted
+    timeout-minutes: 240
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Initialize isolated scoring environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/independent-scores-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$OUT"
+          echo "SCORE_OUTPUT=$OUT" >> "$GITHUB_ENV"
+          ENV_DIR="$RUNNER_TEMP/score-env-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          python3 -m venv "$ENV_DIR"
+          "$ENV_DIR/bin/python" -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          "$ENV_DIR/bin/python" -m pip install -r codes/ml/requirements.txt
+          echo "$ENV_DIR/bin" >> "$GITHUB_PATH"
+          "$ENV_DIR/bin/python" -m pip freeze > "$OUT/scoring_environment.txt"
+      - name: Restore all frozen models and completed DEM snapshots
+        uses: actions/download-artifact@v4
+        with:
+          name: independent-bpm-35326183899-1
+          path: ${{ env.SCORE_OUTPUT }}
+          github-token: ${{ github.token }}
+          run-id: 35326183899
+      - name: Compute exposure and three colored VTP snapshots for every case
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/postprocessing/visualize.py "$SCORE_OUTPUT/experiment/bonded" --rays 2048
+      - name: Score all 180 with frozen models and report flagged-case sensitivity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/fixed_time_evaluation/evaluate.py "$SCORE_OUTPUT/experiment"
+          cat "$SCORE_OUTPUT/experiment/results.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve scores, frozen models, snapshots and QA
+        if: ${{ always() && env.SCORE_OUTPUT != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: independent-bpm-scores-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.SCORE_OUTPUT }}/
+          retention-days: 90
