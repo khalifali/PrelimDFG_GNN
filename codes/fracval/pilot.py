@@ -63,13 +63,10 @@ def attempt(task,src,out,seconds):
 def main():
     p=argparse.ArgumentParser();p.add_argument('--output',type=Path,required=True);p.add_argument('--seconds',type=int,default=120);a=p.parse_args()
     a.output.mkdir(parents=True,exist_ok=True)
-    raw=urllib.request.urlopen(URL,timeout=120).read();assert hashlib.sha256(raw).hexdigest()==SHA
-    (a.output/'FracVAL_original.tar.gz').write_bytes(raw)
-    src=a.output/'original_linux';src.mkdir(exist_ok=True)
-    with tarfile.open(fileobj=io.BytesIO(raw)) as tar:
-        for m in tar.getmembers():
-            if '/Linux/' in m.name and m.name.endswith('.f90'):
-                (src/Path(m.name).name).write_bytes(tar.extractfile(m).read())
+    src=Path(__file__).resolve().parent/'vendor'
+    manifest=json.loads((src/'SHA256.json').read_text())
+    for name,digest in manifest.items():
+        assert hashlib.sha256((src/name).read_bytes()).hexdigest()==digest,name
     # Calibration candidates are disclosed in full; targets refer to measured Dbox.
     # A match requires absolute error <=0.05; quality flags are reported separately.
     tasks=[(1.5,1.5,1.5,918150),(2.,2.,1.2,918200),(2.9,2.9,.5,918290)]
