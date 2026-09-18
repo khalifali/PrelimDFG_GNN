@@ -29,13 +29,6 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          repository: khalifali/LAMFOAM
-          token: ${{ secrets.LAMFOAM_READ_TOKEN }}
-          ref: f61d4f06d0a5f57e7e8f962420cb86a42bdf71ba
-          path: vendor-lamfoam
-          persist-credentials: false
-      - uses: actions/checkout@v4
-        with:
           repository: lammps/lammps
           ref: 611ca3b7f8525ba802373b04f9e3d632d515f7e3
           path: vendor-lammps
@@ -56,8 +49,8 @@ jobs:
           set -euo pipefail
           mkdir -p "$VDW_OUTPUT"
           mpicxx -O2 -std=c++17 -fPIC -shared -DLAMMPS_SMALLBIG \
-            -I vendor-lammps/src -I vendor-lamfoam/include -I vendor-lamfoam/adapters/lammps \
-            codes/dem/comparison/vdw_plugin.cpp vendor-lamfoam/adapters/lammps/pair_lamfoam_vdw.cpp \
+            -I vendor-lammps/src -I codes/dem/comparison/vendor/lamfoam/include -I codes/dem/comparison/vendor/lamfoam/adapters/lammps \
+            codes/dem/comparison/vdw_plugin.cpp codes/dem/comparison/vendor/lamfoam/adapters/lammps/pair_lamfoam_vdw.cpp \
             -o "$VDW_OUTPUT/lamfoam_vdw.so"
           python -m pip freeze > "$VDW_OUTPUT/environment.txt"
       - name: Download BPM geometries and completed mechanical campaign
