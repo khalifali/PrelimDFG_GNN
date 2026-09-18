@@ -1,0 +1,45 @@
+name: FracVAL measured-dimension pilot
+on:
+  push:
+    branches: [main]
+    paths: ['codes/fracval/**', '.github/workflows/fracval-pilot.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot:
+    runs-on: self-hosted
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OPENBLAS_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare isolated environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/fracval-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$ROOT"
+          echo "FRACVAL_ROOT=$ROOT" >> "$GITHUB_ENV"
+          command -v gfortran
+          gfortran --version > "$ROOT/compiler.txt"
+          python3 -m venv "$ROOT/venv"
+          "$ROOT/venv/bin/pip" install numpy scipy matplotlib
+          echo "$ROOT/venv/bin" >> "$GITHUB_PATH"
+      - name: Generate and measure three pilot structures
+        run: |
+          python codes/fracval/pilot.py --output "$FRACVAL_ROOT/results"
+          cat "$FRACVAL_ROOT/results/report.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fracval-pilot-${{ github.run_id }}
+          path: ${{ env.FRACVAL_ROOT }}/results/
+          retention-days: 90
