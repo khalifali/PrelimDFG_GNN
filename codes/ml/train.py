@@ -39,7 +39,28 @@ def splits(records, mode='grouped'):
     groups = np.array([g['group'] for g in records])
     all_ids = np.arange(len(records))
     if mode == 'grouped':
-        outer = list(GroupKFold(n_splits=5).split(all_ids, groups=groups))
+        if all(g['method'] == 'tunable_fractal' for g in records):
+            # Balance parameter groups across morphologies, independent of targets.
+            # GroupKFold's sample-count ordering changes after one exclusion and
+            # can otherwise put two of the three core groups of a morphology
+            # into the same test fold, leaving no separate inner-validation group.
+            by_morphology = {}
+            for g in records:
+                key = (g['requested_df'], g['requested_kf'])
+                by_morphology.setdefault(key, set()).add(g['group'])
+            assignment = {}
+            cursor = 0
+            rng = np.random.default_rng(701)
+            for key in sorted(by_morphology):
+                names = sorted(by_morphology[key])
+                rng.shuffle(names)
+                for name in names:
+                    assignment[name] = cursor % 5
+                    cursor += 1
+            labels = np.array([assignment[g] for g in groups])
+            outer = [(all_ids[labels != f], all_ids[labels == f]) for f in range(5)]
+        else:
+            outer = list(GroupKFold(n_splits=5).split(all_ids, groups=groups))
     elif mode == 'method':
         methods = np.array([g['method'] for g in records])
         outer = [(all_ids[methods != m], all_ids[methods == m]) for m in sorted(set(methods))]

@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: exposure-ml-${{ github.ref }}
   cancel-in-progress: false
@@ -42,22 +43,23 @@ jobs:
           python codes/postprocessing/test_exposure.py
           python codes/ml/test_pipeline.py
           python codes/ml/test_fractal_splits.py
-      - name: Reproduce validated 135-case core plus 45 N500 cases
+      - name: Download completed 16-microsecond bonded campaign
+        uses: actions/download-artifact@v4
+        with:
+          name: fractal-exposure-ml-35288931479-1
+          path: ${{ env.ML_OUTPUT }}
+          github-token: ${{ github.token }}
+          run-id: 35288931479
+      - name: Exclude the approved single failure and calculate Fibonacci exposure
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$ML_OUTPUT"
-          python -m pip freeze > "$ML_OUTPUT/environment.txt"
-          python codes/generation/build_fractal_study.py --output "$ML_OUTPUT/geometries" 2>&1 | tee "$ML_OUTPUT/generation.log"
-      - name: Complete bonded DEM checks and Fibonacci exposure
-        shell: bash
-        run: |
-          set -euo pipefail
-          python codes/dem/prepare.py "$ML_OUTPUT/geometries" --output "$ML_OUTPUT/bonded" --steps 160000
-          python codes/dem/run.py "$ML_OUTPUT/bonded" --workers 2 2>&1 | tee "$ML_OUTPUT/dem.log"
+          python -m pip freeze > "$ML_OUTPUT/ml_environment.txt"
+          python codes/ml/select_completed_campaign.py "$ML_OUTPUT"
           python codes/postprocessing/visualize.py "$ML_OUTPUT/bonded" --rays 2048
-          python codes/ml/dataset.py "$ML_OUTPUT/bonded" --output "$ML_OUTPUT/final_dataset.json"
-      - name: Train historical-design core (135 independent new geometries)
+          python codes/ml/dataset.py "$ML_OUTPUT/bonded" --output "$ML_OUTPUT/final_dataset.json" --expected-cases 179
+          echo 'One failed DEM case excluded before ML: core 134, total 179, N500 45. See selection_report.json.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Train historical-design core (134 passing geometries)
         shell: bash
         run: |
           set -euo pipefail
@@ -69,7 +71,7 @@ jobs:
           name: fractal-core135-${{ github.run_id }}
           path: ${{ env.ML_OUTPUT }}/core135/
           retention-days: 30
-      - name: Train extended 180-case comparison
+      - name: Train extended 179-case comparison
         shell: bash
         run: |
           set -euo pipefail

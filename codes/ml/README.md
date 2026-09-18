@@ -1,3 +1,12 @@
+> Active run: reuse the completed 16-us campaign from Actions run 35288931479.
+> One user-approved exclusion: fractal_dp2_N0100_Df2.6_kf0.8_rep04, residual KE
+> ratio 0.00104786 above 0.001. There are 134 core + 45 extension = 179 cases.
+> The full failed case and its original assessment remain in excluded/; all other
+> cases must pass. selection_report.json records the decision before ML.
+> Output directory names core135 and extended180 refer to the original design;
+> actual training sample counts are 134 and 179. The workflow downloads the saved
+> campaign artifact (30-day retention), so it must be retained to rerun later.
+
 # Geometric-exposure ML: active tunable-fractal study
 
 The mixed-generator campaign is superseded. The active workflow reproduces the
@@ -65,7 +74,8 @@ it is not exactly rotation-invariant. Source and dataset hashes are recorded.
 
 ## Evaluation
 
-Five outer GroupKFold splits use N/Df/kf groups. All diameters and realizations
+Five outer splits use N/Df/kf groups, assigned round-robin across morphologies
+with fixed within-morphology shuffling (seed 701), independently of targets. All diameters and realizations
 within a group stay together. These folds measure transfer to unseen parameter
 combinations, a stricter task than a random realization split. Every model uses
 the same partitions. Out-of-fold means each prediction comes from a model that

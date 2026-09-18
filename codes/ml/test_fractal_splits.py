@@ -16,3 +16,11 @@ for subset,mode in [(records,'grouped'),([g for g in records if g['n']!=500],'gr
             assert all(subset[i]['n']==500 for i in test)
             assert all(subset[i]['n']!=500 for i in train)
 print('All core, extended and size-extrapolation splits passed.')
+
+# A single missing realization must not destroy morphology coverage.
+reduced=records[:20]+records[21:]
+for subset in (reduced,[g for g in reduced if g["n"]!=500]):
+    for train,test,fit,val in splits(subset):
+        assert {subset[i]["requested_df"] for i in fit} == {1.8,2.2,2.6}
+        assert {subset[i]["requested_df"] for i in val} == {1.8,2.2,2.6}
+print("Single-exclusion splits passed.")
