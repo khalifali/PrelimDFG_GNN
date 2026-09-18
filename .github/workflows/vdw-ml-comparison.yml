@@ -1,0 +1,108 @@
+name: Matched vdW relaxation and ML
+on:
+  push:
+    branches: [main]
+    paths: ['codes/dem/comparison/**', '.github/workflows/vdw-ml-comparison.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: vdw-ml-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OMP_NUM_THREADS: '2'
+      OPENBLAS_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: khalifali/LAMFOAM
+          ref: f61d4f06d0a5f57e7e8f962420cb86a42bdf71ba
+          path: vendor-lamfoam
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: lammps/lammps
+          ref: 611ca3b7f8525ba802373b04f9e3d632d515f7e3
+          path: vendor-lammps
+          persist-credentials: false
+      - name: Install isolated LAMMPS and ML environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEM_ENV="$RUNNER_TEMP/vdw-env-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          python3 -m venv "$DEM_ENV"
+          "$DEM_ENV/bin/python" -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          "$DEM_ENV/bin/python" -m pip install -r codes/ml/requirements.txt lammps==2025.7.22.4.0 mpich==5.0.1.post1
+          echo "$DEM_ENV/bin" >> "$GITHUB_PATH"
+          echo "VDW_OUTPUT=$RUNNER_TEMP/vdw-results-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+      - name: Compile the unchanged LAMFOAM vdW pair as a standalone plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$VDW_OUTPUT"
+          mpicxx -O2 -std=c++17 -fPIC -shared -DLAMMPS_SMALLBIG \
+            -I vendor-lammps/src -I vendor-lamfoam/include -I vendor-lamfoam/adapters/lammps \
+            codes/dem/comparison/vdw_plugin.cpp vendor-lamfoam/adapters/lammps/pair_lamfoam_vdw.cpp \
+            -o "$VDW_OUTPUT/lamfoam_vdw.so"
+          python -m pip freeze > "$VDW_OUTPUT/environment.txt"
+      - name: Download BPM geometries and completed mechanical campaign
+        uses: actions/download-artifact@v4
+        with:
+          name: fractal-exposure-ml-35290323430-1
+          path: ${{ runner.temp }}/vdw-source-${{ github.run_id }}
+          github-token: ${{ github.token }}
+          run-id: 35290323430
+      - name: Download BPM v9 training reference
+        uses: actions/download-artifact@v4
+        with:
+          name: v9-comparison-35307361168-1
+          path: ${{ runner.temp }}/bpm-v9-${{ github.run_id }}
+          github-token: ${{ github.token }}
+          run-id: 35307361168
+      - name: Relax the same 179 geometries with vdW and calculate matched exposure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/dem/comparison/run_vdw_campaign.py "$RUNNER_TEMP/vdw-source-$GITHUB_RUN_ID/bonded" --output "$VDW_OUTPUT/campaign" --plugin "$VDW_OUTPUT/lamfoam_vdw.so" --workers 2 2>&1 | tee "$VDW_OUTPUT/relaxation.log"
+          python codes/ml/dataset.py "$VDW_OUTPUT/campaign" --expected-cases 179 --output "$VDW_OUTPUT/final_dataset.json"
+      - name: Save mechanical results before training
+        uses: actions/upload-artifact@v4
+        with:
+          name: vdw-mechanics-${{ github.run_id }}
+          path: ${{ env.VDW_OUTPUT }}/campaign/
+          retention-days: 90
+      - name: Train vdW core on identical BPM v9 splits
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/ml/train.py "$VDW_OUTPUT/final_dataset.json" --mode v9 --particle-counts 50 100 200 --verify-splits "$RUNNER_TEMP/bpm-v9-$GITHUB_RUN_ID/core134_v9/splits.csv" --output "$VDW_OUTPUT/core134_v9" --epochs 300 --patience 50 --seeds 7 17 27 --q 1 2 3 4 --threads 2 2>&1 | tee "$VDW_OUTPUT/core.log"
+      - name: Train extended vdW dataset on identical BPM v9 splits
+        shell: bash
+        run: |
+          set -euo pipefail
+          python codes/ml/train.py "$VDW_OUTPUT/final_dataset.json" --mode v9 --verify-splits "$RUNNER_TEMP/bpm-v9-$GITHUB_RUN_ID/extended179_v9/splits.csv" --output "$VDW_OUTPUT/extended179_v9" --epochs 300 --patience 50 --seeds 7 17 27 --q 1 2 3 4 --threads 2 2>&1 | tee "$VDW_OUTPUT/extended.log"
+      - name: Compare final reports
+        run: |
+          python codes/dem/comparison/compare_reports.py "$RUNNER_TEMP/bpm-v9-$GITHUB_RUN_ID" "$VDW_OUTPUT"
+          cat "$VDW_OUTPUT/bpm_vdw_comparison.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve results and failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vdw-ml-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.VDW_OUTPUT }}/
+          if-no-files-found: warn
+          retention-days: 90
