@@ -40,3 +40,7 @@ not change the paper, slides, or their reported results.
 Missing from the upload: the original hierarchical generator, current GNN
 training/graph-building/exposure scripts, and some DEM execution helpers.
 The new geometry stage is independent of those missing files.
+
+## Literature motivation
+
+See [geometric exposure and shielding](docs/exposure_shielding_literature.md) for the annotated literature on heat/mass transfer, drag, mobility and breakup, and the distinction between physical shielding and our normal-ray geometric target.

@@ -38,3 +38,7 @@ forest and ANN using the six existing conventional descriptors. Recover or
 reconstruct the training script, verify descriptor and contact definitions,
 freeze splits and training-side model selection, then replace placeholders with
 computed scores and figures. Keep reports and slides outside `codes/`.
+
+## Exposure and shielding: literature for the introduction
+
+Use [the annotated literature review](../docs/exposure_shielding_literature.md) when motivating the exposure target. It includes reusable introduction wording, drag/mobility and breakup references, and limits on physical interpretation. Breakage is application context only; the present paper remains separate from the ongoing DFG deagglomeration work.
