@@ -3,7 +3,9 @@
 This project studies how particle arrangement affects aggregate properties and
 whether a graph neural network can represent the relevant structure compactly.
 
-**Current step: 180 geometries, bonded LAMMPS verification, and exposure visualization.**
+**Current step: audit and extend measured structural coverage, then compare normal exposure and angular accessibility.**
+See the [active work plan](docs/work_plan.md) and [359-case coverage audit](results/coverage_audit_20260919/README.md).
+The active plan supersedes the historical sequence below.
 See [the dataset definition](docs/study180.md) and [the DEM guide](codes/dem/README.md).
 Start with [the generation guide](codes/generation/README.md).
 The committed pilot is in [data/generation/pilot_v1](data/generation/pilot_v1).
