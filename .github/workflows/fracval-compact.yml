@@ -1,0 +1,56 @@
+name: FracVAL compactness and larger-subcluster trial
+on:
+  push:
+    branches: [main]
+    paths: ['codes/fracval_compact/**', '.github/workflows/fracval-compact.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: fracval-compact
+  cancel-in-progress: false
+jobs:
+  compact:
+    runs-on: self-hosted
+    timeout-minutes: 45
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OPENBLAS_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare isolated environment
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/fracval-compact-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$ROOT"
+          echo "COMPACT_ROOT=$ROOT" >> "$GITHUB_ENV"
+          command -v gfortran
+          python3 -m venv "$ROOT/venv"
+          "$ROOT/venv/bin/pip" install numpy scipy matplotlib
+          echo "$ROOT/venv/bin" >> "$GITHUB_PATH"
+      - name: Original subclusters with longer generation limits
+        run: |
+          python codes/fracval_compact/run.py --stage original --output "$COMPACT_ROOT/original"
+          cat "$COMPACT_ROOT/original/report.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fracval-compact-original-${{ github.run_id }}
+          path: ${{ env.COMPACT_ROOT }}/original/
+          retention-days: 90
+      - name: Larger subclusters with explicit configuration
+        run: |
+          python codes/fracval_compact/run.py --stage larger --output "$COMPACT_ROOT/larger"
+          cat "$COMPACT_ROOT/larger/report.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fracval-compact-larger-${{ github.run_id }}
+          path: ${{ env.COMPACT_ROOT }}/larger/
+          retention-days: 90
