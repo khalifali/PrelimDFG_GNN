@@ -1,0 +1,66 @@
+name: Matched structure and exposure analysis
+on:
+  push:
+    branches: [main]
+    paths: ['codes/matched_structure/**', '.github/workflows/matched-structure.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: matched-structure
+  cancel-in-progress: false
+jobs:
+  analyze:
+    runs-on: self-hosted
+    timeout-minutes: 90
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare isolated analysis environment
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/matched-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$ROOT"
+          echo "MATCHED_ROOT=$ROOT" >> "$GITHUB_ENV"
+          python3 -m venv "$ROOT/venv"
+          "$ROOT/venv/bin/pip" install numpy scipy scikit-learn networkx matplotlib
+          echo "$ROOT/venv/bin" >> "$GITHUB_PATH"
+          "$ROOT/venv/bin/pip" freeze > "$ROOT/environment.txt"
+      - name: Retrieve existing measured geometries
+        uses: actions/download-artifact@v4
+        with:
+          name: measured-structure-35346823376-1
+          path: ${{ runner.temp }}/matched-source-${{ github.run_id }}
+          github-token: ${{ github.token }}
+          run-id: 35346823376
+      - name: Match structures and analyze additional descriptors
+        run: |
+          python codes/matched_structure/analyze.py analyze --source "$RUNNER_TEMP/matched-source-$GITHUB_RUN_ID/results/graphs.json" --output "$MATCHED_ROOT/results"
+          cp codes/matched_structure/protocol.json "$MATCHED_ROOT/results/protocol.json"
+          cp "$MATCHED_ROOT/environment.txt" "$MATCHED_ROOT/results/environment.txt"
+          cat "$MATCHED_ROOT/results/report.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matched-structure-preliminary-${{ github.run_id }}
+          path: ${{ env.MATCHED_ROOT }}/results/
+          retention-days: 90
+      - name: Check ray resolution and orientation sensitivity
+        run: |
+          python codes/matched_structure/analyze.py numerics --source "$RUNNER_TEMP/matched-source-$GITHUB_RUN_ID/results/graphs.json" --output "$MATCHED_ROOT/results"
+          cat "$MATCHED_ROOT/results/report.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: matched-structure-${{ github.run_id }}
+          path: ${{ env.MATCHED_ROOT }}/results/
+          retention-days: 90

@@ -1,8 +1,6 @@
 name: FracVAL compactness and larger-subcluster trial
+# Automatic generation paused at the user's request; manual runs remain available.
 on:
-  push:
-    branches: [main]
-    paths: ['codes/fracval_compact/**', '.github/workflows/fracval-compact.yml']
   workflow_dispatch:
 permissions:
   contents: read

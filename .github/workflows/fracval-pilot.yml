@@ -1,8 +1,6 @@
 name: FracVAL measured-dimension pilot
+# Automatic generation paused at the user's request; manual runs remain available.
 on:
-  push:
-    branches: [main]
-    paths: ['codes/fracval/**', '.github/workflows/fracval-pilot.yml']
   workflow_dispatch:
 permissions:
   contents: read
