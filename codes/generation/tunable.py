@@ -68,3 +68,46 @@ def generate(n,df,kf,rng):
         try:return merge(a,b,df,kf,rng)
         except RuntimeError:continue
     raise RuntimeError('Hierarchical cluster construction exhausted')
+
+
+
+def generate_bounded(n, df, kf, rng, seconds=60, event=None):
+    """Opt-in v2: retry failed children under one shared wall-clock budget.
+
+    Same mass-radius law, balanced split, contact and overlap constraints as v1.
+    A failed child now causes a parent retry. No relaxed geometric acceptance.
+    Event callback receives failure size/stage even when the caller times out.
+    """
+    import time
+    if n < 25 or n % 25:
+        raise ValueError('Particle count must be a positive multiple of 25')
+    deadline = time.monotonic() + seconds
+    def emit(**record):
+        if event is not None: event(record)
+    def check():
+        if time.monotonic() >= deadline:
+            raise TimeoutError('Shared generation budget exhausted')
+    def build(count):
+        for attempt in range(30 if count == 25 else 20):
+            check()
+            stage = 'seed' if count == 25 else 'children'
+            try:
+                if count == 25:
+                    p = np.array([[-1., 0, 0], [1., 0, 0]])
+                    for _ in range(2, 25):
+                        check()
+                        p = merge(p, np.zeros((1, 3)), df, kf, rng, max_rotations=1)
+                    return p
+                left = 25 * ((count // 25) // 2)
+                a = build(left)
+                b = build(count-left)
+                stage = 'merge'
+                check()
+                return merge(a, b, df, kf, rng)
+            except RuntimeError as exc:
+                emit(n=count, stage=stage, attempt=attempt, reason=str(exc))
+        raise RuntimeError(f'Construction exhausted at N={count}')
+    result = build(n)
+    inspect(result)
+    emit(n=n, stage='complete', rg2=float(rg2(result)))
+    return result

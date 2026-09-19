@@ -1,0 +1,48 @@
+name: Compact generation and measurement validation
+on:
+  push:
+    branches: [main]
+    paths: ['codes/compact_validation/**', 'codes/structure/box_ensemble.py', '.github/workflows/compact-validation.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: compact-validation
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    runs-on: self-hosted
+    timeout-minutes: 90
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare isolated environment
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/compact-validation-$GITHUB_RUN_ID"
+          mkdir -p "$ROOT"
+          echo "DIAG_ROOT=$ROOT" >> "$GITHUB_ENV"
+          python3 -m venv "$ROOT/venv"
+          "$ROOT/venv/bin/pip" install numpy scipy
+          echo "$ROOT/venv/bin" >> "$GITHUB_PATH"
+          "$ROOT/venv/bin/pip" freeze > "$ROOT/environment.txt"
+      - name: Reference-window and generation diagnostics
+        run: |
+          python codes/compact_validation/run.py run --output "$DIAG_ROOT/results"
+          cat "$DIAG_ROOT/results/report.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compact-validation-${{ github.run_id }}
+          path: |
+            ${{ env.DIAG_ROOT }}/results/
+            ${{ env.DIAG_ROOT }}/environment.txt
+          retention-days: 90

@@ -73,3 +73,15 @@ Report R², RMSE and MAE for each target, interpolation/extrapolation separately
 ## Stage 2 follow-up: compactness diagnostics
 
 The first pilot generated 12/18 cases; all 12 passed BPM. Open structures reached measured Dbox about 1.54, but the six most compact requests failed. A follow-up diagnostic now compares fixed box windows and grid shifts on chains and simple-cubic arrays up to 27000 spheres, and tests eight coupled generation settings at N=25,100,1000 (24 attempts, 60 seconds each). N=25 isolates seed construction from hierarchical merging. Exact necessary trimer separation bounds are recorded independently of stochastic search. No production estimator changes, no FracVAL restart, no training. Successful follow-up candidates require later BPM verification before admission. Select no fitting window merely because it returns a desired dimension.
+
+## Stage 2 correction: bounded generation and candidate measurement
+
+The compact diagnostic (run 35432477601) generated 14/24 unrelaxed candidates. Compact small structures are feasible, while seven compact N1000 attempts failed or timed out. The production estimator changed from approximately 2.67 to 2.56 after rotation of the same 27000-sphere cube, despite both outputs passing its existing quality flags.
+
+`generate_bounded` is an opt-in retry correction: child failures are caught by the parent and recorded with size/stage; one shared deadline bounds recursive retries. The mass-radius law, balanced hierarchy, contact and non-overlap criteria are unchanged. The legacy entry point remains available for reproducibility.
+
+`codes/structure/box_ensemble.py` is a candidate estimator, not a silent replacement. It uses isotropic random rotations, independent three-coordinate grid offsets and the rotation-invariant maximum centre distance plus diameter for its fitting extent. This changes the scale interval relative to legacy PCA extent, so descriptor versions must never be mixed. Raw curves, local slopes, window sensitivity, scale span, grid spread and half-ensemble disagreement are retained. The convex-hull porosity definition is unchanged.
+
+`codes/compact_validation/run.py` compares v1/v2 on identical seeds: N=100,1000; coupled (Df,kf)=(2.6,0.8),(2.8,0.7),(2.9,0.7); two realizations; 24 total attempts. Both receive a 65-second external budget (v2 additionally has a 60-second internal deadline). Chains N=100,1000 and cubes N=125,1000,8000 are checked in three orientations with 8 and 16 sampled rotations and four grid shifts. Fixed numerical review gates: rotation range <=0.03 and change on doubling orientation budget <=0.03. These are numerical tolerances, not proof of fractal scaling; all other quality diagnostics remain relevant. The smaller/larger ensemble samples share a deterministic prefix.
+
+Review success rates and failure stages before accepting generation improvements. Review numerical gates before promoting the estimator; no slope is required to approach a chosen target. Successful geometries still require BPM and final-geometry measurement. No database expansion, angular-target production or new training starts in this diagnostic workflow.
