@@ -1,0 +1,12 @@
+{
+  "source_run": 35346823376,
+  "source_artifact": 10550461056,
+  "cases": 359,
+  "status": "Exploratory development analysis, not independent confirmation or a causal experiment",
+  "primary": {"same_N": true, "max_delta_box_dimension": 0.03, "max_delta_hull_porosity": 0.01},
+  "sensitivities": ["tight: Dbox 0.02, porosity 0.005", "loose: Dbox 0.05, porosity 0.02", "primary plus Rg within 2 percent", "primary with box quality ok only"],
+  "matching": "Maximum-cardinality disjoint matching, then minimum normalized descriptor distance. Exposure and requested generation parameters do not enter matching.",
+  "numerics": "Three largest-exposure-gap pairs and three closest-descriptor pairs not already chosen; 2048, 8192, 16384 rays plus a fixed rotation at 8192 rays. These are diagnostic examples, not an unbiased numerical-error sample.",
+  "comparison": "Paired signed exposure differences: zero prediction, basic-descriptor ridge, expanded-descriptor ridge; outer 5-fold or fewer by pair count; inner regularization selection. Each pair stays together.",
+  "interpretation": "Matches are on finite-scale estimated descriptors. Residual mismatch and descriptor measurement limitations preclude claiming identical physical morphology. No GNN training in this stage."
+}

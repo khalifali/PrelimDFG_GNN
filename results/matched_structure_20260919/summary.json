@@ -1,0 +1,161 @@
+{
+  "source_sha256": "6d881e9ed704fdc4814e80dbf31b03714b038a7dc18a44026d1f0073bb741695",
+  "cases": 359,
+  "source_graph_coordinates": "archived centered/diameter-normalized float32 coordinates; ray reproduction checked separately",
+  "status": "exploratory development analysis",
+  "summaries": [
+    {
+      "protocol": "primary",
+      "pairs": 167,
+      "cases": 334,
+      "eligible_edges": 1392,
+      "median_abs_exposure_gap": 0.0033471679687499534,
+      "p90_abs_exposure_gap": 0.00973339843750001,
+      "max_abs_exposure_gap": 0.017216796874999996,
+      "median_abs_delta_Dbox": 0.005070735146759819,
+      "median_abs_delta_porosity": 0.0018532378332081212
+    },
+    {
+      "protocol": "tight",
+      "pairs": 147,
+      "cases": 294,
+      "eligible_edges": 726,
+      "median_abs_exposure_gap": 0.002911551339285723,
+      "p90_abs_exposure_gap": 0.009359375000000036,
+      "max_abs_exposure_gap": 0.017104492187499987,
+      "median_abs_delta_Dbox": 0.005853267381707106,
+      "median_abs_delta_porosity": 0.0012303349732717406
+    },
+    {
+      "protocol": "loose",
+      "pairs": 168,
+      "cases": 336,
+      "eligible_edges": 2170,
+      "median_abs_exposure_gap": 0.0031126302083333,
+      "p90_abs_exposure_gap": 0.010508658854166622,
+      "max_abs_exposure_gap": 0.017216796874999996,
+      "median_abs_delta_Dbox": 0.00478199354654163,
+      "median_abs_delta_porosity": 0.0018790418829880973
+    },
+    {
+      "protocol": "rg_matched",
+      "pairs": 167,
+      "cases": 334,
+      "eligible_edges": 1392,
+      "median_abs_exposure_gap": 0.0033471679687499534,
+      "p90_abs_exposure_gap": 0.00973339843750001,
+      "max_abs_exposure_gap": 0.017216796874999996,
+      "median_abs_delta_Dbox": 0.005070735146759819,
+      "median_abs_delta_porosity": 0.0018532378332081212
+    },
+    {
+      "protocol": "quality_ok",
+      "pairs": 120,
+      "cases": 240,
+      "eligible_edges": 1120,
+      "median_abs_exposure_gap": 0.0034577636718750027,
+      "p90_abs_exposure_gap": 0.009382763671875016,
+      "max_abs_exposure_gap": 0.017216796874999996,
+      "median_abs_delta_Dbox": 0.004936457826360874,
+      "median_abs_delta_porosity": 0.0015900427597322353
+    }
+  ],
+  "paired_models": [
+    {
+      "model": "zero",
+      "pairs": 167,
+      "rmse": 0.005977247154231994,
+      "mae": 0.004502485403077775,
+      "alphas": []
+    },
+    {
+      "model": "basic",
+      "pairs": 167,
+      "rmse": 0.00589931204647619,
+      "mae": 0.004418096933100563,
+      "alphas": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ]
+    },
+    {
+      "model": "expanded",
+      "pairs": 167,
+      "rmse": 0.004584931778297678,
+      "mae": 0.0034780490908490713,
+      "alphas": [
+        10,
+        10,
+        100,
+        10,
+        1
+      ]
+    }
+  ],
+  "diagnostic_selection": "Three largest exposure gaps, then three closest descriptor matches not already chosen",
+  "numerical_checks": [
+    {
+      "a": "fractal_dp1_N0100_Df1.8_kf1.3_rep02",
+      "b": "fractal_dp2_N0100_Df1.8_kf1.3_rep03",
+      "archived_abs_gap": 0.017216796874999996,
+      "gap_16384": 0.017083129882812575,
+      "sum_observed_numerical_spreads": 0.00053222656249996,
+      "gap_exceeds_observed_spread": true,
+      "sign_consistent": true,
+      "reproduction_ok": true
+    },
+    {
+      "a": "fractal_dp2_N0100_Df1.8_kf1.3_rep02",
+      "b": "fractal_dp2_N0100_Df1.8_kf1.3_rep05",
+      "archived_abs_gap": 0.01708007812500001,
+      "gap_16384": 0.016788940429687593,
+      "sum_observed_numerical_spreads": 0.0006384277343748357,
+      "gap_exceeds_observed_spread": true,
+      "sign_consistent": true,
+      "reproduction_ok": true
+    },
+    {
+      "a": "fractal_dp1_N0050_Df2.2_kf1.1_rep04",
+      "b": "fractal_dp2_N0050_Df2.2_kf1.1_rep01",
+      "archived_abs_gap": 0.016318359375000036,
+      "gap_16384": 0.016433105468749987,
+      "sum_observed_numerical_spreads": 0.0009912109375000977,
+      "gap_exceeds_observed_spread": true,
+      "sign_consistent": true,
+      "reproduction_ok": true
+    },
+    {
+      "a": "independent_extrapolation_dp1.5_N0750_Df1.8_kf1.3_rep03",
+      "b": "independent_extrapolation_dp1_N0750_Df1.8_kf1.3_rep04",
+      "archived_abs_gap": 0.002289713541666627,
+      "gap_16384": 0.0024875488281249636,
+      "sum_observed_numerical_spreads": 0.0002066243489583508,
+      "gap_exceeds_observed_spread": true,
+      "sign_consistent": true,
+      "reproduction_ok": true
+    },
+    {
+      "a": "independent_extrapolation_dp2_N0750_Df1.8_kf1.3_rep01",
+      "b": "independent_extrapolation_dp2_N0750_Df1.8_kf1.3_rep05",
+      "archived_abs_gap": 0.0037272135416666075,
+      "gap_16384": 0.003308593750000033,
+      "sum_observed_numerical_spreads": 0.00048649088541652397,
+      "gap_exceeds_observed_spread": true,
+      "sign_consistent": true,
+      "reproduction_ok": true
+    },
+    {
+      "a": "independent_extrapolation_dp1.5_N1000_Df1.8_kf1.3_rep04",
+      "b": "independent_extrapolation_dp1_N1000_Df1.8_kf1.3_rep01",
+      "archived_abs_gap": 0.005050292968749925,
+      "gap_16384": 0.005243408203124966,
+      "sum_observed_numerical_spreads": 0.00029064941406242717,
+      "gap_exceeds_observed_spread": true,
+      "sign_consistent": true,
+      "reproduction_ok": true
+    }
+  ]
+}

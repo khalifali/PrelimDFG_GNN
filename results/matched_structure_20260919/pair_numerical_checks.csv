@@ -1,0 +1,7 @@
+a,b,archived_abs_gap,gap_16384,sum_observed_numerical_spreads,gap_exceeds_observed_spread,sign_consistent,reproduction_ok
+fractal_dp1_N0100_Df1.8_kf1.3_rep02,fractal_dp2_N0100_Df1.8_kf1.3_rep03,0.017216796874999996,0.017083129882812575,0.00053222656249996,True,True,True
+fractal_dp2_N0100_Df1.8_kf1.3_rep02,fractal_dp2_N0100_Df1.8_kf1.3_rep05,0.01708007812500001,0.016788940429687593,0.0006384277343748357,True,True,True
+fractal_dp1_N0050_Df2.2_kf1.1_rep04,fractal_dp2_N0050_Df2.2_kf1.1_rep01,0.016318359375000036,0.016433105468749987,0.0009912109375000977,True,True,True
+independent_extrapolation_dp1.5_N0750_Df1.8_kf1.3_rep03,independent_extrapolation_dp1_N0750_Df1.8_kf1.3_rep04,0.002289713541666627,0.0024875488281249636,0.0002066243489583508,True,True,True
+independent_extrapolation_dp2_N0750_Df1.8_kf1.3_rep01,independent_extrapolation_dp2_N0750_Df1.8_kf1.3_rep05,0.0037272135416666075,0.003308593750000033,0.00048649088541652397,True,True,True
+independent_extrapolation_dp1.5_N1000_Df1.8_kf1.3_rep04,independent_extrapolation_dp1_N1000_Df1.8_kf1.3_rep01,0.005050292968749925,0.005243408203124966,0.00029064941406242717,True,True,True
