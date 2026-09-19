@@ -1,0 +1,68 @@
+name: GNN versus expanded structural descriptors
+on:
+  push:
+    branches: [main]
+    paths: ['codes/structural_comparison/**', '.github/workflows/structural-comparison.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: structural-comparison
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: self-hosted
+    timeout-minutes: 1440
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        seed: [7, 17, 27]
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Isolated training environment
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/structural-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-${{ matrix.seed }}"
+          mkdir -p "$ROOT"
+          echo "COMPARISON_ROOT=$ROOT" >> "$GITHUB_ENV"
+          python3 -m venv "$ROOT/venv"
+          "$ROOT/venv/bin/pip" install torch --index-url https://download.pytorch.org/whl/cpu
+          "$ROOT/venv/bin/pip" install numpy scipy scikit-learn networkx matplotlib joblib torch-geometric
+          echo "$ROOT/venv/bin" >> "$GITHUB_PATH"
+          "$ROOT/venv/bin/pip" freeze > "$ROOT/environment.txt"
+      - uses: actions/download-artifact@v4
+        with:
+          name: measured-structure-35346823376-1
+          path: ${{ env.COMPARISON_ROOT }}/source
+          github-token: ${{ github.token }}
+          run-id: 35346823376
+      - name: Verify pair-preserving splits before training
+        run: |
+          python codes/structural_comparison/run.py --source "$COMPARISON_ROOT/source/results/graphs.json" --matched results/matched_structure_20260919 --output "$COMPARISON_ROOT/verification" --seed ${{ matrix.seed }} --verify-only
+      - name: Train and evaluate on frozen common splits
+        run: |
+          python codes/structural_comparison/run.py --source "$COMPARISON_ROOT/source/results/graphs.json" --matched results/matched_structure_20260919 --output "$COMPARISON_ROOT/results" --seed ${{ matrix.seed }}
+          cmp "$COMPARISON_ROOT/verification/splits.csv" "$COMPARISON_ROOT/results/splits.csv"
+          cp "$COMPARISON_ROOT/environment.txt" "$COMPARISON_ROOT/results/environment.txt"
+          cat "$COMPARISON_ROOT/results/report.md" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: structural-comparison-${{ github.run_id }}-seed${{ matrix.seed }}
+          path: |
+            ${{ env.COMPARISON_ROOT }}/results/
+            ${{ env.COMPARISON_ROOT }}/verification/
+            ${{ env.COMPARISON_ROOT }}/environment.txt
+          retention-days: 90
