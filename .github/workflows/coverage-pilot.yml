@@ -1,0 +1,63 @@
+name: Measured structural coverage pilot
+on:
+  push:
+    branches: [main]
+    paths: ['codes/coverage_pilot/**', '.github/workflows/coverage-pilot.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: coverage-pilot
+  cancel-in-progress: false
+jobs:
+  pilot:
+    runs-on: self-hosted
+    timeout-minutes: 180
+    env:
+      PYTHONPATH: ''
+      PYTHONHOME: ''
+      LD_LIBRARY_PATH: ''
+      LD_PRELOAD: ''
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare isolated environment
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/coverage-pilot-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$ROOT"
+          echo "PILOT_ROOT=$ROOT" >> "$GITHUB_ENV"
+          python3 -m venv "$ROOT/venv"
+          "$ROOT/venv/bin/pip" install numpy scipy lammps==2025.7.22.4.0 mpich==5.0.1.post1
+          "$ROOT/venv/bin/pip" freeze > "$ROOT/environment.txt"
+          echo "$ROOT/venv/bin" >> "$GITHUB_PATH"
+      - name: Generate bounded candidates and measure references
+        run: python codes/coverage_pilot/run.py pilot --output "$PILOT_ROOT/results"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-initial-${{ github.run_id }}
+          path: ${{ env.PILOT_ROOT }}/results/
+          retention-days: 90
+      - name: Prepare unchanged BPM verification
+        run: python codes/dem/prepare.py "$PILOT_ROOT/results/geometries" --output "$PILOT_ROOT/results/bonded" --steps 160000 --dt 1e-10
+      - name: Run BPM and retain assessment failures
+        id: dem
+        run: python codes/dem/run.py "$PILOT_ROOT/results/bonded" --workers 2
+      - name: Measure completed final geometries
+        if: always()
+        run: |
+          if test -d "$PILOT_ROOT/results/bonded"; then
+            python codes/coverage_pilot/run.py final --output "$PILOT_ROOT/results"
+            cat "$PILOT_ROOT/results/report.md" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-pilot-${{ github.run_id }}
+          path: |
+            ${{ env.PILOT_ROOT }}/results/
+            ${{ env.PILOT_ROOT }}/environment.txt
+          retention-days: 90

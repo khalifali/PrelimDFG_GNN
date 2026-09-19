@@ -15,7 +15,7 @@ No matched-pair objective or pair-preserving folds in the restored study. Existi
 | Stage | Status | Deliverable / gate |
 |---|---|---|
 | 1. Audit existing 359 BPM geometries | Initial numerical audit complete | Per-N descriptor ranges, joint occupancy, quality flags and targeted gaps |
-| 2. Verify attainable additional coverage | Next | Small current-generator feasibility pilot, with box-estimator reference checks |
+| 2. Verify attainable additional coverage | Pilot implemented; runner campaign initiated | Small current-generator feasibility pilot, with box-estimator reference checks |
 | 3. Expand development database | Pending stage 2 | Accepted final BPM geometries fill demonstrable gaps; no arbitrary total |
 | 4. Freeze evaluation and reserve fresh tests | Pending coverage definition | Separate independent interpolation and extrapolation cohorts with tracked lineages |
 | 5. Verify and compute angular accessibility | Verification may proceed alongside stages 2–3 | Reference geometries, resolution/rotation tests, then both targets for accepted database |
@@ -65,3 +65,7 @@ Report R², RMSE and MAE for each target, interpolation/extrapolation separately
 ## Writing resources
 
 [Exposure and shielding literature](exposure_shielding_literature.md) supplies motivation and interpretation limits. Existing runner results remain useful methodological evidence, but do not establish the result of this expanded two-target study.
+
+## Stage 2 pilot implementation
+
+`codes/coverage_pilot/run.py` and `.github/workflows/coverage-pilot.yml` define 18 attempts: N=100,350,1000, each with coupled (requested Df,kf)=(1.5,1.3),(1.8,1.3),(2.2,1.1),(2.6,0.8),(2.8,0.8),(2.9,1.0). One independent deterministic seed per setting, 180-second generation budget. All successfully generated candidates proceed to unchanged 160000-step BPM verification; failed assessments are retained and not accepted automatically. Initial/final descriptors are recorded. Chains N=50,200,1000 and simple-cubic arrays N=125,1000,8000 are estimator references only. This feasibility sample estimates neither success probability nor final database size. Review results before expanding batches.
