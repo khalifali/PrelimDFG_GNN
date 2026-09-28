@@ -1,0 +1,47 @@
+name: LAMMPS superellipsoid candidate check
+on:
+  pull_request:
+    paths:
+      - .github/workflows/lammps-superellipsoid-candidate.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-dem:
+    runs-on: self-hosted
+    timeout-minutes: 90
+    env:
+      OMP_NUM_THREADS: '1'
+    steps:
+      - name: Check out candidate LAMMPS
+        uses: actions/checkout@v4
+        with:
+          repository: lammps/lammps
+          ref: d71abe6102c44577442ba7f03b7378a83166b9fd
+          path: lammps
+          persist-credentials: false
+      - name: Verify pinned source
+        run: test "$(git -C lammps rev-parse HEAD)" = d71abe6102c44577442ba7f03b7378a83166b9fd
+      - name: Configure and build native DEM
+        run: |
+          set -euo pipefail
+          cmake -S lammps/cmake -B "$RUNNER_TEMP/lammps-superellipsoid-build-$GITHUB_RUN_ID" -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DBUILD_MPI=ON -DPKG_ASPHERE=ON -DPKG_GRANULAR=ON
+          cmake --build "$RUNNER_TEMP/lammps-superellipsoid-build-$GITHUB_RUN_ID" --target lmp --parallel 8
+      - name: Run serial and two-rank contact examples
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/lammps-superellipsoid-test-$GITHUB_RUN_ID"
+          mkdir -p "$work"
+          sed 's/^run[[:space:]]*3000$/run 100/' lammps/examples/ASPHERE/superellipsoid_gran/in.ellipsoid_gran > "$work/in.short"
+          exe="$RUNNER_TEMP/lammps-superellipsoid-build-$GITHUB_RUN_ID/lmp"
+          (cd "$work" && "$exe" -in in.short -log log.serial -screen screen.serial)
+          (cd "$work" && mpirun --oversubscribe -np 2 "$exe" -in in.short -log log.mpi -screen screen.mpi)
+          grep -q 'Loop time' "$work/log.serial"
+          grep -q 'Loop time' "$work/log.mpi"
+          if grep -Ei '(^|[[:space:]])(nan|inf)([[:space:]]|$)' "$work/log.serial" "$work/log.mpi"; then
+            echo 'Non-finite DEM output' >&2
+            exit 1
+          fi
+          echo 'Native convex ellipsoid contact: serial and 2-rank runs completed 100 steps.' >> "$GITHUB_STEP_SUMMARY"
