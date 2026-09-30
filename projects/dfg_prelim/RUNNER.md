@@ -4,6 +4,8 @@ This directory contains the fixed-geometry oxygen-uptake case builder and runner
 
 The runner workflow prepares the complete matrix (12 N=50 agglomerates at Pe = 0, 1, 10, and 50) on the repository's `lamfoam-local` self-hosted runner. It validates the 48 manifests, then attempts exactly one runtime smoke test: `bpca_N0050_sample09/Pe10`. It does not launch the other cases.
 
+Before running, configure the `LAMFOAM_READ_TOKEN` Actions secret in this repository with read access to the private `khalifali/LAMFOAM` repository. The workflow checks out the `codex/surface-marker-uptake` branch into the runner workspace and builds LAMFOAM there against the runner's pinned OpenFOAM/LAMMPS dependencies.
+
 The workflow is intentionally scoped to the `codex/dfg-prelim-run-one-case` branch. It saves the generated project and solver output under `$HOME/dfg_prelim_results/<run-id>-<attempt>` on the runner and uploads a 30-day GitHub Actions artifact. Solver completion only checks workflow execution; it does not certify numerical accuracy of the experimental surface-marker model.
 
 For manual case preparation from the repository root:

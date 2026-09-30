@@ -9,7 +9,7 @@ permissions:
   contents: read
 jobs:
   prepare-and-smoke-test:
-    runs-on: [self-hosted, linux, x64, lamfoam-local]
+    runs-on: self-hosted
     timeout-minutes: 90
     env:
       OMP_NUM_THREADS: 1
@@ -42,51 +42,53 @@ jobs:
           PY
           cp -a "$project/." "$result/"
           echo "result=$result" >> "$GITHUB_OUTPUT"
-      - name: Activate available OpenFOAM environment
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -n "${OPENFOAM_BASHRC:-}" ] && [ -f "$OPENFOAM_BASHRC" ]; then
-            source "$OPENFOAM_BASHRC"
-          else
-            for candidate in \
-              "$HOME/OpenFOAM/OpenFOAM-13/etc/bashrc" \
-              "/opt/OpenFOAM/OpenFOAM-13/etc/bashrc" \
-              "/opt/openfoam13/etc/bashrc" \
-              "/usr/lib/openfoam/openfoam13/etc/bashrc"; do
-              if [ -f "$candidate" ]; then source "$candidate"; break; fi
-            done
-          fi
-          {
-            echo '### Solver preflight'
-            echo "- blockMesh: $(command -v blockMesh || echo MISSING)"
-            echo "- lamfoamIBSolver: $(command -v lamfoamIBSolver || echo MISSING)"
-            if [ -n "${LAMFOAM_PLUGIN:-}" ] && [ -f "$LAMFOAM_PLUGIN" ]; then
-              echo "- LAMFOAM_PLUGIN: available"
-            else
-              echo "- LAMFOAM_PLUGIN: MISSING or invalid"
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
-          command -v blockMesh >/dev/null
-          command -v lamfoamIBSolver >/dev/null
-          test -n "${LAMFOAM_PLUGIN:-}" && test -f "$LAMFOAM_PLUGIN"
-      - name: Run one Pe=10 smoke case
+      - name: Check out private LAMFOAM source
+        if: ${{ secrets.LAMFOAM_READ_TOKEN != '' }}
+        uses: actions/checkout@v4
+        with:
+          repository: khalifali/LAMFOAM
+          ref: codex/surface-marker-uptake
+          token: ${{ secrets.LAMFOAM_READ_TOKEN }}
+          path: LAMFOAM/source
+          persist-credentials: false
+      - name: Require LAMFOAM source checkout
         shell: bash
         env:
-          RESULT_DIR: ${{ steps.prepare.outputs.result }}
+          LAMFOAM_READ_TOKEN: ${{ secrets.LAMFOAM_READ_TOKEN }}
         run: |
           set -euo pipefail
-          if [ -n "${OPENFOAM_BASHRC:-}" ] && [ -f "$OPENFOAM_BASHRC" ]; then
-            source "$OPENFOAM_BASHRC"
-          else
-            for candidate in \
-              "$HOME/OpenFOAM/OpenFOAM-13/etc/bashrc" \
-              "/opt/OpenFOAM/OpenFOAM-13/etc/bashrc" \
-              "/opt/openfoam13/etc/bashrc" \
-              "/usr/lib/openfoam/openfoam13/etc/bashrc"; do
-              if [ -f "$candidate" ]; then source "$candidate"; break; fi
-            done
+          if [ ! -d "$GITHUB_WORKSPACE/LAMFOAM/source/.git" ]; then
+            echo "::error::LAMFOAM is private. Add the LAMFOAM_READ_TOKEN Actions secret with read access to khalifali/LAMFOAM, then rerun."
+            exit 1
           fi
+      - name: Pull and build LAMFOAM on this runner
+        shell: /usr/bin/python3 ${{ github.workspace }}/LAMFOAM/source/scripts/ci-shell.py {0}
+        run: |
+          set -euo pipefail
+          python3 scripts/ci-runner-state.py
+          source scripts/ci-openfoam.sh
+          cmake -S . -B build -DLAMFOAM_BUILD_TESTS=ON
+          cmake --build build --target lamfoam_core lamfoam_surface_marker_tests --parallel 8
+          ctest --test-dir build -R '^lamfoam.surface_markers$' --output-on-failure
+          test -f "$LAMFOAM_PLUGIN"
+          wmake libso adapters/openfoam
+          wmake applications/solvers/lamfoamIBSolver
+          wmake applications/solvers/lamfoamHybridSolver
+      - name: Verify built solver environment
+        shell: /usr/bin/python3 ${{ github.workspace }}/LAMFOAM/source/scripts/ci-shell.py {0}
+        run: |
+          set -euo pipefail
+          source scripts/ci-openfoam.sh
+          command -v blockMesh
+          command -v lamfoamIBSolver
+          test -f "$LAMFOAM_PLUGIN"
+          echo "- Pulled and built LAMFOAM branch codex/surface-marker-uptake on the PrelimDFG_GNN runner." >> "$GITHUB_STEP_SUMMARY"
+      - name: Run one Pe=10 smoke case
+        shell: /usr/bin/python3 ${{ github.workspace }}/LAMFOAM/source/scripts/ci-shell.py {0}
+        run: |
+          set -euo pipefail
+          source scripts/ci-openfoam.sh
+          RESULT_DIR="$RUNNER_TEMP/dfg_prelim-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           python3 "$RESULT_DIR/run.py" --run-prepared "$RESULT_DIR/cases/bpca_N0050_sample09/Pe10"
           python3 - "$RESULT_DIR/cases/bpca_N0050_sample09/Pe10/run.json" <<'PY'
           import json, pathlib, sys
