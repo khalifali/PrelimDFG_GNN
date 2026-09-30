@@ -1,0 +1,28 @@
+FoamFile { version 2.0; format ascii; class dictionary; object couplingProperties; }
+solveFlow true; hydrodynamicForceModel ShirgaonkarIB;
+nNoSlipCorrectors 1;
+interFaceModel standardIB; interFaceModelCoeffs { skin 2; }
+voidFractionModel standardIB; voidFractionModelCoeffs { alphaMin 0; }
+periodicMapping { periodicAxes (0 0 0); }
+demSubsteps 100;
+lammps { plugin "$LAMFOAM_PLUGIN"; input "$LAMFOAM_INPUT"; fixId couple; group all; }
+exchangeDefaults standard;
+exchangeFields { oxygenInventory { location particle; shape scalar; valueType float64; direction bidirectional; update overwrite; dimensions [0 0 0 0 1 0 0]; persistent yes; } }
+
+// Optional shared forces are disabled unless enabled explicitly below.
+// LAMMPS alone defines gravity (DEM/in.lammps); do not add a gravity vector here.
+// buoyancy { enabled true; pressureConvention dynamic; fullyImmersed true; }
+// Enabling buoyancy without a compatible native fix gravity is an error.
+// lubrication { enabled true; model normal; particlePairs true; excludeBondedPairs false;
+//   dynamicViscosity [1 -1 -1 0 0 0 0] 0.001;
+//   minimumGap [0 1 0 0 0 0 0] 1e-6; cutoffGap [0 1 0 0 0 0 0] 1e-5;
+//   maxDampingNumber 0.2; }
+// The mechanical exchange fields come from exchangeDefaults standard (matched units; default SI).
+// oxygenInventory is additional state: overwrite replaces its current value,
+// while persistent yes preserves it in native DEM restart data.
+// Initial inventory can be set with fix lamfoam/initialize in DEM/in.lammps.
+// See docs/tutorial-guide.md and the model manuals before changing the physics.
+
+// Optional flow/AMR startup with stationary particles and no transport.
+// Absolute CFD end time in case units; 0 disables it. See docs/flow-warmup.md.
+flowWarmupEndTime 0;

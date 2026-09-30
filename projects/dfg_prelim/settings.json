@@ -1,0 +1,17 @@
+{
+  "geometry": "geometries/bpca_N0050_sample09.csv",
+  "diffusivity_m2_s": 2e-09,
+  "initial_concentration_mol_m3": 1.0,
+  "particle_density_kg_m3": 1050.0,
+  "base_cells_per_min_diameter": 4,
+  "amr_levels": 1,
+  "markers_per_particle": 128,
+  "padding_diameters": 2.0,
+  "padding_diffusion_lengths": 6.0,
+  "max_cells": 2000000,
+  "delta_t_s": 2e-06,
+  "warmup_s": 8e-06,
+  "uptake_duration_s": 1.6e-05,
+  "refine_interval_steps": 2,
+  "write_interval_steps": 4
+}

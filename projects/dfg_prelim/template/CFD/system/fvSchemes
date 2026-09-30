@@ -1,0 +1,19 @@
+FoamFile { version 2.0; format ascii; class dictionary; object fvSchemes; }
+
+ddtSchemes { default backward; }
+gradSchemes { default Gauss linear; }
+divSchemes
+{
+    default none;
+    div(phi,U) Gauss linear;
+    div(phi,oxygen) Gauss limitedLinear 1;
+    div(oxygenFlux,oxygen) Gauss limitedLinear 1;
+    div(phi,flm) Gauss limitedLinear 1;
+    div(phi,fmm) Gauss limitedLinear 1;
+    div(devTau) Gauss linear;
+    div(particleViscousStress) Gauss linear;
+}
+laplacianSchemes { default Gauss linear corrected; }
+interpolationSchemes { default linear; }
+snGradSchemes { default corrected; }
+fluxRequired { default no; p; }

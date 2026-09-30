@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+case_dir=$(cd -- "$(dirname -- "$0")" && pwd)
+exec python3 "$case_dir/analyse.py" "${1:-$case_dir/runs/example}"

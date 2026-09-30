@@ -1,0 +1,123 @@
+name: DFG preliminary case preparation and one-case run
+on:
+  push:
+    branches: [codex/dfg-prelim-run-one-case]
+    paths:
+      - 'projects/dfg_prelim/**'
+      - '.github/workflows/dfg-prelim-cases.yml'
+permissions:
+  contents: read
+jobs:
+  prepare-and-smoke-test:
+    runs-on: [self-hosted, linux, x64, lamfoam-local]
+    timeout-minutes: 90
+    env:
+      OMP_NUM_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare all 48 cases
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+          project="$GITHUB_WORKSPACE/projects/dfg_prelim"
+          result="$RUNNER_TEMP/dfg_prelim-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$result"
+          python3 "$project/build_cases.py" --source-repo "$GITHUB_WORKSPACE"
+          python3 - "$project/cases/matrix.csv" "$project/cases" <<'PY'
+          import csv, json, pathlib, sys
+          matrix_path, root = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+          rows = list(csv.DictReader(matrix_path.open()))
+          assert len(rows) == 48, f"expected 48 cases, got {len(rows)}"
+          assert {int(r["Pe"]) for r in rows} == {0, 1, 10, 50}
+          assert len({r["geometry_id"] for r in rows}) == 12
+          for pe in (0, 1, 10, 50):
+              assert sum(int(r["Pe"]) == pe for r in rows) == 12
+          for row in rows:
+              manifest = json.loads((root / row["case_directory"] / "run.json").read_text())
+              assert manifest["status"] == "prepared_unrun", (row, manifest["status"])
+          print("Validated 12 geometries x 4 Peclet numbers = 48 prepared cases.")
+          PY
+          cp -a "$project/." "$result/"
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+      - name: Activate available OpenFOAM environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${OPENFOAM_BASHRC:-}" ] && [ -f "$OPENFOAM_BASHRC" ]; then
+            source "$OPENFOAM_BASHRC"
+          else
+            for candidate in \
+              "$HOME/OpenFOAM/OpenFOAM-13/etc/bashrc" \
+              "/opt/OpenFOAM/OpenFOAM-13/etc/bashrc" \
+              "/opt/openfoam13/etc/bashrc" \
+              "/usr/lib/openfoam/openfoam13/etc/bashrc"; do
+              if [ -f "$candidate" ]; then source "$candidate"; break; fi
+            done
+          fi
+          {
+            echo '### Solver preflight'
+            echo "- blockMesh: $(command -v blockMesh || echo MISSING)"
+            echo "- lamfoamIBSolver: $(command -v lamfoamIBSolver || echo MISSING)"
+            if [ -n "${LAMFOAM_PLUGIN:-}" ] && [ -f "$LAMFOAM_PLUGIN" ]; then
+              echo "- LAMFOAM_PLUGIN: available"
+            else
+              echo "- LAMFOAM_PLUGIN: MISSING or invalid"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          command -v blockMesh >/dev/null
+          command -v lamfoamIBSolver >/dev/null
+          test -n "${LAMFOAM_PLUGIN:-}" && test -f "$LAMFOAM_PLUGIN"
+      - name: Run one Pe=10 smoke case
+        shell: bash
+        env:
+          RESULT_DIR: ${{ steps.prepare.outputs.result }}
+        run: |
+          set -euo pipefail
+          if [ -n "${OPENFOAM_BASHRC:-}" ] && [ -f "$OPENFOAM_BASHRC" ]; then
+            source "$OPENFOAM_BASHRC"
+          else
+            for candidate in \
+              "$HOME/OpenFOAM/OpenFOAM-13/etc/bashrc" \
+              "/opt/OpenFOAM/OpenFOAM-13/etc/bashrc" \
+              "/opt/openfoam13/etc/bashrc" \
+              "/usr/lib/openfoam/openfoam13/etc/bashrc"; do
+              if [ -f "$candidate" ]; then source "$candidate"; break; fi
+            done
+          fi
+          python3 "$RESULT_DIR/run.py" --run-prepared "$RESULT_DIR/cases/bpca_N0050_sample09/Pe10"
+          python3 - "$RESULT_DIR/cases/bpca_N0050_sample09/Pe10/run.json" <<'PY'
+          import json, pathlib, sys
+          p = pathlib.Path(sys.argv[1])
+          result = json.loads(p.read_text())
+          assert result["status"] == "completed", result["status"]
+          print("Case completed:", p.parent)
+          print("Analysis:", json.dumps(result.get("analysis", {}), sort_keys=True))
+          PY
+          echo "### One-case run" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Completed `bpca_N0050_sample09/Pe10` (runtime smoke test; no accuracy certification)." >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve cases and run outputs on runner
+        if: always() && steps.prepare.outputs.result != ''
+        shell: bash
+        env:
+          RESULT_DIR: ${{ steps.prepare.outputs.result }}
+        run: |
+          set -euo pipefail
+          destination="$HOME/dfg_prelim_results/$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir -p "$(dirname "$destination")"
+          if [ -e "$destination" ]; then
+            echo "Refusing to overwrite existing result directory: $destination" >&2
+            exit 1
+          fi
+          cp -a "$RESULT_DIR" "$destination"
+          echo "- Runner result directory: `$destination`" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload prepared cases and run output
+        if: always() && steps.prepare.outputs.result != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: dfg-prelim-cases-and-smoke-run-${{ github.run_id }}
+          path: ${{ steps.prepare.outputs.result }}/
+          if-no-files-found: error
+          retention-days: 30
