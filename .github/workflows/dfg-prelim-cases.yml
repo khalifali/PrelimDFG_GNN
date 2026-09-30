@@ -42,8 +42,15 @@ jobs:
           PY
           cp -a "$project/." "$result/"
           echo "result=$result" >> "$GITHUB_OUTPUT"
+      - name: Detect private LAMFOAM checkout credential
+        id: lamfoam-auth
+        shell: bash
+        env:
+          LAMFOAM_READ_TOKEN: ${{ secrets.LAMFOAM_READ_TOKEN }}
+        run: |
+          if [ -n "$LAMFOAM_READ_TOKEN" ]; then echo "available=true" >> "$GITHUB_OUTPUT"; fi
       - name: Check out private LAMFOAM source
-        if: ${{ secrets.LAMFOAM_READ_TOKEN != '' }}
+        if: steps.lamfoam-auth.outputs.available == 'true'
         uses: actions/checkout@v4
         with:
           repository: khalifali/LAMFOAM
@@ -53,8 +60,6 @@ jobs:
           persist-credentials: false
       - name: Require LAMFOAM source checkout
         shell: bash
-        env:
-          LAMFOAM_READ_TOKEN: ${{ secrets.LAMFOAM_READ_TOKEN }}
         run: |
           set -euo pipefail
           if [ ! -d "$GITHUB_WORKSPACE/LAMFOAM/source/.git" ]; then
