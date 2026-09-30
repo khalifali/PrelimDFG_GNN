@@ -9,7 +9,7 @@ permissions:
   contents: read
 jobs:
   prepare-and-smoke-test:
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64, lamfoam-local]
     timeout-minutes: 90
     env:
       OMP_NUM_THREADS: 1
