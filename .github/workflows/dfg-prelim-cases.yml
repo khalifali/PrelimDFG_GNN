@@ -63,8 +63,8 @@ jobs:
           cat > "$askpass" <<'SH'
           #!/bin/sh
           case "$1" in
-            *Username*) printf '%s\\n' x-access-token ;;
-            *Password*) printf '%s\\n' "$LAMFOAM_READ_TOKEN" ;;
+            *Username*) printf '%s\n' x-access-token ;;
+            *Password*) printf '%s\n' "$LAMFOAM_READ_TOKEN" ;;
           esac
           SH
           chmod 700 "$askpass"
