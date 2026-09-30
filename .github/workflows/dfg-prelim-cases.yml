@@ -43,14 +43,14 @@ jobs:
           cp -a "$project/." "$result/"
           echo "result=$result" >> "$GITHUB_OUTPUT"
       - name: Detect private LAMFOAM checkout credential
-        id: lamfoam-auth
+        id: lamfoam_auth
         shell: bash
         env:
           LAMFOAM_READ_TOKEN: ${{ secrets.LAMFOAM_READ_TOKEN }}
         run: |
           if [ -n "$LAMFOAM_READ_TOKEN" ]; then echo "available=true" >> "$GITHUB_OUTPUT"; fi
       - name: Check out private LAMFOAM source
-        if: steps.lamfoam-auth.outputs.available == 'true'
+        if: steps.lamfoam_auth.outputs.available == 'true'
         uses: actions/checkout@v4
         with:
           repository: khalifali/LAMFOAM
@@ -67,9 +67,11 @@ jobs:
             exit 1
           fi
       - name: Pull and build LAMFOAM on this runner
-        shell: /usr/bin/python3 ${{ github.workspace }}/LAMFOAM/source/scripts/ci-shell.py {0}
+        shell: bash
+        working-directory: ${{ github.workspace }}/LAMFOAM/source
         run: |
           set -euo pipefail
+          export GITHUB_WORKSPACE="$PWD"
           python3 scripts/ci-runner-state.py
           source scripts/ci-openfoam.sh
           cmake -S . -B build -DLAMFOAM_BUILD_TESTS=ON
@@ -83,6 +85,7 @@ jobs:
         shell: /usr/bin/python3 ${{ github.workspace }}/LAMFOAM/source/scripts/ci-shell.py {0}
         run: |
           set -euo pipefail
+          export GITHUB_WORKSPACE="$PWD"
           source scripts/ci-openfoam.sh
           command -v blockMesh
           command -v lamfoamIBSolver
@@ -92,6 +95,7 @@ jobs:
         shell: /usr/bin/python3 ${{ github.workspace }}/LAMFOAM/source/scripts/ci-shell.py {0}
         run: |
           set -euo pipefail
+          export GITHUB_WORKSPACE="$PWD"
           source scripts/ci-openfoam.sh
           RESULT_DIR="$RUNNER_TEMP/dfg_prelim-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           python3 "$RESULT_DIR/run.py" --run-prepared "$RESULT_DIR/cases/bpca_N0050_sample09/Pe10"
