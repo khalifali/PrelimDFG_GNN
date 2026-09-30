@@ -42,19 +42,19 @@ jobs:
           PY
           cp -a "$project/." "$result/"
           echo "result=$result" >> "$GITHUB_OUTPUT"
-      - name: Check out private LAMFOAM source
+      - name: Pull private LAMFOAM source
         uses: actions/checkout@v4
         with:
           repository: khalifali/LAMFOAM
           ref: codex/surface-marker-uptake
-          token: ${{ secrets.LAMFOAM_READ_TOKEN || github.token }}
+          token: ${{ secrets.LAMFOAM_READ_TOKEN }}
           path: LAMFOAM/source
           persist-credentials: false
-      - name: Pull and build LAMFOAM on this runner
+      - name: Build LAMFOAM on the PrelimDFG_GNN runner
         shell: bash
-        working-directory: ${{ github.workspace }}/LAMFOAM/source
         run: |
           set -euo pipefail
+          cd "$GITHUB_WORKSPACE/LAMFOAM/source"
           export GITHUB_WORKSPACE="$PWD"
           python3 scripts/ci-runner-state.py
           source scripts/ci-openfoam.sh
@@ -65,23 +65,15 @@ jobs:
           wmake libso adapters/openfoam
           wmake applications/solvers/lamfoamIBSolver
           wmake applications/solvers/lamfoamHybridSolver
-      - name: Verify built solver environment
-        shell: /usr/bin/python3 ${{ github.workspace }}/LAMFOAM/source/scripts/ci-shell.py {0}
-        run: |
-          set -euo pipefail
-          export GITHUB_WORKSPACE="$PWD"
-          source scripts/ci-openfoam.sh
-          command -v blockMesh
-          command -v lamfoamIBSolver
-          test -f "$LAMFOAM_PLUGIN"
-          echo "- Pulled and built LAMFOAM branch codex/surface-marker-uptake on the PrelimDFG_GNN runner." >> "$GITHUB_STEP_SUMMARY"
       - name: Run one Pe=10 smoke case
-        shell: /usr/bin/python3 ${{ github.workspace }}/LAMFOAM/source/scripts/ci-shell.py {0}
+        shell: bash
+        env:
+          RESULT_DIR: ${{ steps.prepare.outputs.result }}
         run: |
           set -euo pipefail
+          cd "$GITHUB_WORKSPACE/LAMFOAM/source"
           export GITHUB_WORKSPACE="$PWD"
           source scripts/ci-openfoam.sh
-          RESULT_DIR="$RUNNER_TEMP/dfg_prelim-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           python3 "$RESULT_DIR/run.py" --run-prepared "$RESULT_DIR/cases/bpca_N0050_sample09/Pe10"
           python3 - "$RESULT_DIR/cases/bpca_N0050_sample09/Pe10/run.json" <<'PY'
           import json, pathlib, sys
@@ -92,7 +84,7 @@ jobs:
           print("Analysis:", json.dumps(result.get("analysis", {}), sort_keys=True))
           PY
           echo "### One-case run" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Completed `bpca_N0050_sample09/Pe10` (runtime smoke test; no accuracy certification)." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Completed bpca_N0050_sample09/Pe10 (runtime smoke test; no accuracy certification)." >> "$GITHUB_STEP_SUMMARY"
       - name: Preserve cases and run outputs on runner
         if: always() && steps.prepare.outputs.result != ''
         shell: bash
@@ -107,7 +99,7 @@ jobs:
             exit 1
           fi
           cp -a "$RESULT_DIR" "$destination"
-          echo "- Runner result directory: `$destination`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Runner result directory: $destination" >> "$GITHUB_STEP_SUMMARY"
       - name: Upload prepared cases and run output
         if: always() && steps.prepare.outputs.result != ''
         uses: actions/upload-artifact@v4
